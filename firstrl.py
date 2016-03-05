@@ -4,6 +4,38 @@ SCREEN_WIDTH = 80
 SCREEN_HEIGHT = 50
 LIMIT_FPS = 20
 
+# ================================================== MAP SECTION =================================================
+MAP_WIDTH = 80
+MAP_HEIGHT = 45
+
+# Why are these not defined as constants? Are they going to be put into a color lookup dict later on?
+color_dark_wall = libtcod.Color(0, 0, 100)
+color_dark_ground = libtcod.Color(50, 50, 100)
+
+
+class Tile(object):
+    def __init__(self, blocked, block_sight=None):
+        self.blocked = blocked
+
+        # That's...basically shadowing. Reassignment! Hiss! Boo!
+        if block_sight is None:
+            block_sight = blocked
+        self.block_sight = block_sight
+
+
+def make_game_map():
+    # OH GOD! WHAT IS SCOPE EVEN
+    global game_map
+
+    game_map = [[Tile(False)
+                 for _ in range(MAP_HEIGHT)]
+                for _ in range(MAP_WIDTH)]
+
+    game_map[30][22].blocked = True
+    game_map[30][22].block_sight = True
+    game_map[50][22].blocked = True
+    game_map[50][22].block_sight = True
+
 
 # Object is using 'con' as the buffer, which is unbound! Does that...work?
 class Object(object):
@@ -14,8 +46,10 @@ class Object(object):
         self.color = color
 
     def move(self, dx, dy):
-        self.x += dx
-        self.y += dy
+        # SCOPING DEAR OH GOD WHY FIX THIS AFTER THE TUTORIAL
+        if not game_map[self.x + dx][self.y + dy].blocked:
+            self.x += dx
+            self.y += dy
 
     # TODO: Have draw take the buffer to draw to as a parameter!
     def draw(self):
@@ -62,19 +96,37 @@ def handle_keys():
         player.move(1, 0)
 
 
+def render_all():
+    for o in objects:
+        o.draw()
+
+    for y in range(MAP_HEIGHT):
+        for x in range(MAP_WIDTH):
+            wall = game_map[x][y].block_sight
+            if wall:
+                libtcod.console_set_char_background(con, x, y, color_dark_wall, libtcod.BKGND_SET)
+            else:
+                libtcod.console_set_char_background(con, x, y, color_dark_ground, libtcod.BKGND_SET)
+
+    libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
+
+
+def clear_objects():
+    for o in objects:
+        o.clear()
+
+# =================================================== MAIN LOOP ==================================================
+
+# Init before main loop
+make_game_map()
+
 # Main loop (what is exit fn?)
 while not libtcod.console_is_window_closed():
     libtcod.console_set_default_foreground(0, libtcod.white)
 
-    for o in objects:
-        o.draw()
-
-    # Flush buffers
-    libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
+    render_all()
     libtcod.console_flush()
-
-    for o in objects:
-        o.clear()
+    clear_objects()
 
     exit_status = handle_keys()
     if exit_status:
