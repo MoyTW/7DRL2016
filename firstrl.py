@@ -25,6 +25,7 @@ color_light_ground = libtcod.Color(200, 180, 50)
 class Tile(object):
     def __init__(self, blocked, block_sight=None):
         self.blocked = blocked
+        self.explored = False
 
         # That's...basically shadowing. Reassignment! Hiss! Boo!
         if block_sight is None:
@@ -205,15 +206,17 @@ def render_all():
             visible = libtcod.map_is_in_fov(fov_map, x, y)
             wall = game_map[x][y].block_sight
             if not visible:
-                if wall:
-                    libtcod.console_set_char_background(con, x, y, color_dark_wall, libtcod.BKGND_SET)
-                else:
-                    libtcod.console_set_char_background(con, x, y, color_dark_ground, libtcod.BKGND_SET)
+                if game_map[x][y].explored:
+                    if wall:
+                        libtcod.console_set_char_background(con, x, y, color_dark_wall, libtcod.BKGND_SET)
+                    else:
+                        libtcod.console_set_char_background(con, x, y, color_dark_ground, libtcod.BKGND_SET)
             else:
                 if wall:
                     libtcod.console_set_char_background(con, x, y, color_light_wall, libtcod.BKGND_SET)
                 else:
                     libtcod.console_set_char_background(con, x, y, color_light_ground, libtcod.BKGND_SET)
+                game_map[x][y].explored = True
 
     libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
 
