@@ -4,6 +4,10 @@ SCREEN_WIDTH = 80
 SCREEN_HEIGHT = 50
 LIMIT_FPS = 20
 
+FOV_ALGO = 0
+FOV_LIGHT_WALLS = True
+TORCH_RADIUS = 10
+
 # ================================================== MAP SECTION =================================================
 MAP_WIDTH = 80
 MAP_HEIGHT = 45
@@ -12,9 +16,10 @@ ROOM_MAX_SIZE = 10
 ROOM_MIN_SIZE = 6
 MAX_ROOMS = 30
 
-# Why are these not defined as constants? Are they going to be put into a color lookup dict later on?
 color_dark_wall = libtcod.Color(0, 0, 100)
+color_light_wall = libtcod.Color(130, 110, 50)
 color_dark_ground = libtcod.Color(50, 50, 100)
+color_light_ground = libtcod.Color(200, 180, 50)
 
 
 class Tile(object):
@@ -132,8 +137,9 @@ class Object(object):
 
     # TODO: Have draw take the buffer to draw to as a parameter!
     def draw(self):
-        libtcod.console_set_default_foreground(con, self.color)
-        libtcod.console_put_char(con, self.x, self.y, self.char, libtcod.BKGND_NONE)
+        if libtcod.map_is_in_fov(fov_map, self.x, self.y):
+            libtcod.console_set_default_foreground(con, self.color)
+            libtcod.console_put_char(con, self.x, self.y, self.char, libtcod.BKGND_NONE)
 
     # TODO: Have clear take the buffer to draw to as a parameter!
     def clear(self):
@@ -159,6 +165,9 @@ objects = [npc, player]
 
 # uuuugh scoping
 def handle_keys():
+    # TODO: scope
+    global fov_recompute
+
     key = libtcod.console_wait_for_keypress(True)
     if key.vk == libtcod.KEY_ENTER and key.lalt:
         libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
@@ -167,25 +176,44 @@ def handle_keys():
 
     if libtcod.console_is_key_pressed(libtcod.KEY_UP):
         player.move(0, -1)
+        fov_recompute = True
     elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
         player.move(0, 1)
+        fov_recompute = True
     elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
         player.move(-1, 0)
+        fov_recompute = True
     elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
         player.move(1, 0)
+        fov_recompute = True
 
 
 def render_all():
+    # TODO: scope
+    global fov_recompute
+
     for o in objects:
         o.draw()
 
+    if fov_recompute:
+        fov_recompute = False
+        libtcod.map_compute_fov(fov_map, player.x, player.y, TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
+
+    # Underscore because shadowing
     for y in range(MAP_HEIGHT):
         for x in range(MAP_WIDTH):
+            visible = libtcod.map_is_in_fov(fov_map, x, y)
             wall = game_map[x][y].block_sight
-            if wall:
-                libtcod.console_set_char_background(con, x, y, color_dark_wall, libtcod.BKGND_SET)
+            if not visible:
+                if wall:
+                    libtcod.console_set_char_background(con, x, y, color_dark_wall, libtcod.BKGND_SET)
+                else:
+                    libtcod.console_set_char_background(con, x, y, color_dark_ground, libtcod.BKGND_SET)
             else:
-                libtcod.console_set_char_background(con, x, y, color_dark_ground, libtcod.BKGND_SET)
+                if wall:
+                    libtcod.console_set_char_background(con, x, y, color_light_wall, libtcod.BKGND_SET)
+                else:
+                    libtcod.console_set_char_background(con, x, y, color_light_ground, libtcod.BKGND_SET)
 
     libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
 
@@ -198,6 +226,15 @@ def clear_objects():
 
 # Init before main loop
 make_game_map()
+
+fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
+for g_y in range(MAP_HEIGHT):
+    for g_x in range(MAP_WIDTH):
+        libtcod.map_set_properties(fov_map, g_x, g_y, not game_map[g_x][g_y].block_sight,
+                                   not game_map[g_x][g_y].blocked)
+
+# I'm not super pleased with the global-ness here.
+fov_recompute = True
 
 # Main loop (what is exit fn?)
 while not libtcod.console_is_window_closed():
