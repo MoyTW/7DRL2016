@@ -7,8 +7,9 @@ LIMIT_FPS = 20
 # Set font
 libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
 
-# Set window
+# Initialize windows/buffers
 libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'tutorial roguelike! whooo!', False)
+con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
 
 # I don't want this to be real-time, so this line effectively does nothing!
 libtcod.sys_set_fps(LIMIT_FPS)
@@ -39,11 +40,15 @@ def handle_keys():
 
 # Main loop (what is exit fn?)
 while not libtcod.console_is_window_closed():
-    # TODO: Is it necessary to set to run on each frame?
     libtcod.console_set_default_foreground(0, libtcod.white)
-    libtcod.console_put_char(0, playerx, playery, '@', libtcod.BKGND_NONE)
+
+    libtcod.console_put_char(con, playerx, playery, '@', libtcod.BKGND_NONE)
+
+    # Flush buffers
+    libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
     libtcod.console_flush()
-    libtcod.console_put_char(0, playerx, playery, ' ', libtcod.BKGND_NONE)
+
+    libtcod.console_put_char(con, playerx, playery, ' ', libtcod.BKGND_NONE)
 
     exit_status = handle_keys()
     if exit_status:
