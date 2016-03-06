@@ -178,6 +178,26 @@ class Object(object):
         libtcod.console_put_char(con, self.x, self.y, ' ', libtcod.BKGND_NONE)
 
 
+def player_move_or_attack(dx, dy):
+    global fov_recompute
+
+    x = player.x + dx
+    y = player.y + dy
+
+    target = None
+    for obj in objects:
+        if obj.x == x and obj.y == y:
+            target = obj
+            break
+
+    if target is not None:
+        print("Cannot attack " + target.name)
+    else:
+        player.move(dx, dy)
+        fov_recompute = True
+
+
+
 # uuuugh scoping
 def handle_keys():
     # TODO: scope
@@ -191,17 +211,13 @@ def handle_keys():
 
     if game_state == 'playing':
         if libtcod.console_is_key_pressed(libtcod.KEY_UP):
-            player.move(0, -1)
-            fov_recompute = True
+            player_move_or_attack(0, -1)
         elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
-            player.move(0, 1)
-            fov_recompute = True
+            player_move_or_attack(0, 1)
         elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
-            player.move(-1, 0)
-            fov_recompute = True
+            player_move_or_attack(-1, 0)
         elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
-            player.move(1, 0)
-            fov_recompute = True
+            player_move_or_attack(1, 0)
 
     else:
         'didnt-take-turn'  # TODO: Enum
@@ -285,3 +301,8 @@ while not libtcod.console_is_window_closed():
     player_action = handle_keys()
     if player_action == 'exit':
         break
+
+    if game_state == 'playing' and player_action != 'didnt-take-turn':
+        for o in objects:
+            if o != player:
+                print('The ' + o.name + ' growls!')
