@@ -166,22 +166,6 @@ class Object(object):
         libtcod.console_put_char(con, self.x, self.y, ' ', libtcod.BKGND_NONE)
 
 
-# Set font
-libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
-
-# Initialize windows/buffers
-libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'tutorial roguelike! whooo!', False)
-con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
-
-# I don't want this to be real-time, so this line effectively does nothing!
-libtcod.sys_set_fps(LIMIT_FPS)
-
-# Initialize Object objects
-# TODO: Rename Object lol
-player = Object(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, '@', libtcod.white)
-objects = [player]
-
-
 # uuuugh scoping
 def handle_keys():
     # TODO: scope
@@ -244,6 +228,21 @@ def clear_objects():
         o.clear()
 
 # =================================================== MAIN LOOP ==================================================
+
+# Set font
+libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
+
+# Initialize windows/buffers
+libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'tutorial roguelike! whooo!', False)
+con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
+
+# I don't want this to be real-time, so this line effectively does nothing!
+libtcod.sys_set_fps(LIMIT_FPS)
+
+# Initialize Object objects
+# TODO: Rename Object lol
+player = Object(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, '@', libtcod.white)
+objects = [player]
 
 # Init before main loop
 make_game_map()
