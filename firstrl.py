@@ -49,6 +49,15 @@ class Rect(object):
         return self.x1 <= other.x2 and self.x2 >= other.x1 and self.y1 <= other.y2 and self.y2 >= other.y1
 
 
+def is_blocked(x, y):
+    if game_map[x][y].blocked:
+        return True
+    for o in objects:
+        if o.blocks and o.x == x and o.y == y:
+            return True
+    return False
+
+
 def create_room(room):
     # TODO: Fix this scoping issue
     global game_map
@@ -81,12 +90,13 @@ def place_objects(room):
         x = libtcod.random_get_int(0, room.x1 + 1, room.x2 - 1)
         y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
 
-        if libtcod.random_get_int(0, 0, 100) < 80:
-            monster = Object(x, y, 'o', libtcod.desaturated_green)
-        else:
-            monster = Object(x, y, 'T', libtcod.darker_green)
+        if not is_blocked(x, y):
+            if libtcod.random_get_int(0, 0, 100) < 80:
+                monster = Object(x, y, 'o', 'orc', libtcod.desaturated_green, blocks=True)
+            else:
+                monster = Object(x, y, 'T', 'troll', libtcod.darker_green, blocks=True)
 
-        objects.append(monster)
+            objects.append(monster)
 
 
 def make_game_map():
@@ -143,15 +153,17 @@ def make_game_map():
 
 # Object is using 'con' as the buffer, which is unbound! Does that...work?
 class Object(object):
-    def __init__(self, x, y, char, color):
+    def __init__(self, x, y, char, name, color, blocks=False):
         self.x = x
         self.y = y
         self.char = char
+        self.name = name
         self.color = color
+        self.blocks = blocks
 
     def move(self, dx, dy):
         # SCOPING DEAR OH GOD WHY FIX THIS AFTER THE TUTORIAL
-        if not game_map[self.x + dx][self.y + dy].blocked:
+        if not is_blocked(self.x + dx, self.y + dy):
             self.x += dx
             self.y += dy
 
@@ -241,7 +253,7 @@ libtcod.sys_set_fps(LIMIT_FPS)
 
 # Initialize Object objects
 # TODO: Rename Object lol
-player = Object(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, '@', libtcod.white)
+player = Object(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, '@', 'player', libtcod.white, blocks=True)
 objects = [player]
 
 # Init before main loop
