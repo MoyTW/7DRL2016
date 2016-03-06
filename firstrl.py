@@ -187,20 +187,24 @@ def handle_keys():
     if key.vk == libtcod.KEY_ENTER and key.lalt:
         libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
     elif key.vk == libtcod.KEY_ESCAPE:
-        return True
+        return 'exit'
 
-    if libtcod.console_is_key_pressed(libtcod.KEY_UP):
-        player.move(0, -1)
-        fov_recompute = True
-    elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
-        player.move(0, 1)
-        fov_recompute = True
-    elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
-        player.move(-1, 0)
-        fov_recompute = True
-    elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
-        player.move(1, 0)
-        fov_recompute = True
+    if game_state == 'playing':
+        if libtcod.console_is_key_pressed(libtcod.KEY_UP):
+            player.move(0, -1)
+            fov_recompute = True
+        elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
+            player.move(0, 1)
+            fov_recompute = True
+        elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
+            player.move(-1, 0)
+            fov_recompute = True
+        elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
+            player.move(1, 0)
+            fov_recompute = True
+
+    else:
+        'didnt-take-turn'  # TODO: Enum
 
 
 def render_all():
@@ -257,6 +261,8 @@ player = Object(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, '@', 'player', libtcod.whit
 objects = [player]
 
 # Init before main loop
+game_state = 'playing'  # TODO: Enum?
+player_action = None
 make_game_map()
 
 fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
@@ -276,6 +282,6 @@ while not libtcod.console_is_window_closed():
     libtcod.console_flush()
     clear_objects()
 
-    exit_status = handle_keys()
-    if exit_status:
+    player_action = handle_keys()
+    if player_action == 'exit':
         break
