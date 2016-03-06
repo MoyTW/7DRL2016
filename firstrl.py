@@ -1,5 +1,6 @@
 import libtcodpy as libtcod
 import math
+import textwrap
 
 SCREEN_WIDTH = 80
 SCREEN_HEIGHT = 50
@@ -12,6 +13,10 @@ TORCH_RADIUS = 10
 BAR_WIDTH = 20
 PANEL_HEIGHT = 7
 PANEL_Y = SCREEN_HEIGHT - PANEL_HEIGHT
+
+MSG_X = BAR_WIDTH + 2
+MSG_WIDTH = SCREEN_WIDTH - BAR_WIDTH - 2
+MSG_HEIGHT = PANEL_HEIGHT - 1
 
 # ================================================== MAP SECTION =================================================
 MAP_WIDTH = 80
@@ -249,10 +254,10 @@ class Fighter(object):
     def attack(self, target):
         damage = self.power - target.fighter.defense
         if damage > 0:
-            print(self.owner.name.capitalize() + ' attacks ' + target.name + ' for ' + str(damage))
+            message(self.owner.name.capitalize() + ' attacks ' + target.name + ' for ' + str(damage), libtcod.yellow)
             target.fighter.take_damage(damage)
         else:
-            print(self.owner.name.capitalize() + ' attacks ' + target.name + ' but it does no damage')
+            message(self.owner.name.capitalize() + ' attacks ' + target.name + ' but it does no damage', libtcod.green)
 
     def take_damage(self, damage):
         if damage > 0:
@@ -320,7 +325,7 @@ def handle_keys():
 
 def player_death(_):
     global game_state
-    print('You died!')
+    message('You died!', libtcod.red)
     game_state = 'dead'  # TODO: Enum
 
     player.char = '%'
@@ -328,7 +333,7 @@ def player_death(_):
 
 
 def monster_death(monster):
-    print(monster.name.capitalize() + ' is dead!')
+    message(monster.name.capitalize() + ' is dead!', libtcod.red)
     monster.char = '%'
     monster.color = libtcod.dark_red
     monster.blocks = False
@@ -375,8 +380,24 @@ def render_all():
     libtcod.console_set_default_background(panel, libtcod.black)
     libtcod.console_clear(panel)
 
+    y = 1
+    for (line, color) in game_msgs:
+        libtcod.console_set_default_foreground(panel, color)
+        libtcod.console_print_ex(panel, MSG_X, y, libtcod.BKGND_NONE, libtcod.LEFT, line)
+        y += 1
+
     render_bar(1, 1, BAR_WIDTH, 'HP', player.fighter.hp, player.fighter.max_hp, libtcod.light_red, libtcod.darker_red)
     libtcod.console_blit(panel, 0, 0, SCREEN_WIDTH, PANEL_HEIGHT, 0, 0, PANEL_Y)
+
+
+def message(new_msg, color=libtcod.white):
+    new_msg_lines = textwrap.wrap(new_msg, MSG_WIDTH)
+
+    for line in new_msg_lines:
+        if len(game_msgs) == MSG_HEIGHT:
+            del game_msgs[0]
+
+        game_msgs.append((line, color))
 
 
 def clear_objects():
@@ -403,18 +424,20 @@ player = Object(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, '@', 'player', libtcod.whit
 objects = [player]
 
 # Init before main loop
-game_state = 'playing'  # TODO: Enum?
-player_action = None
 make_game_map()
 
+game_state = 'playing'  # TODO: Enum?
+player_action = None
+
+fov_recompute = True
 fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
 for g_y in range(MAP_HEIGHT):
     for g_x in range(MAP_WIDTH):
         libtcod.map_set_properties(fov_map, g_x, g_y, not game_map[g_x][g_y].block_sight,
                                    not game_map[g_x][g_y].blocked)
 
-# I'm not super pleased with the global-ness here.
-fov_recompute = True
+game_msgs = []
+message('Initial Message')
 
 # Main loop (what is exit fn?)
 while not libtcod.console_is_window_closed():
