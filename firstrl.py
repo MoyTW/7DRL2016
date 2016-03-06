@@ -93,13 +93,13 @@ def place_objects(room):
 
         if not is_blocked(x, y):
             if libtcod.random_get_int(0, 0, 100) < 80:
-                fighter_component = Fighter(hp=10, defense=0, power=3)
+                fighter_component = Fighter(hp=10, defense=0, power=3, death_function=monster_death)
                 ai_component = BasicMonster()
 
                 monster = Object(x, y, 'o', 'orc', libtcod.desaturated_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
             else:
-                fighter_component = Fighter(hp=10, defense=0, power=3)
+                fighter_component = Fighter(hp=10, defense=0, power=3, death_function=monster_death)
                 ai_component = BasicMonster()
 
                 monster = Object(x, y, 'T', 'troll', libtcod.darker_green, blocks=True, fighter=fighter_component,
@@ -210,13 +210,36 @@ class Object(object):
     def clear(self):
         libtcod.console_put_char(con, self.x, self.y, ' ', libtcod.BKGND_NONE)
 
+    def send_to_back(self):
+        global objects
+        objects.remove(self)
+        objects.insert(0, self)
+
 
 class Fighter(object):
-    def __init__(self, hp, defense, power):
+    def __init__(self, hp, defense, power, death_function=None):
         self.max_hp = hp
         self.hp = hp
         self.defense = defense
         self.power = power
+        self.death_function = death_function
+
+    def attack(self, target):
+        damage = self.power - target.fighter.defense
+        if damage > 0:
+            print(self.owner.name.capitalize() + ' attacks ' + target.name + ' for ' + str(damage))
+            target.fighter.take_damage(damage)
+        else:
+            print(self.owner.name.capitalize() + ' attacks ' + target.name + ' but it does no damage')
+
+    def take_damage(self, damage):
+        if damage > 0:
+            self.hp -= damage
+
+        if self.hp == 0:
+            function = self.death_function
+            if function is not None:
+                function(self.owner)
 
 
 class BasicMonster(object):
@@ -226,7 +249,7 @@ class BasicMonster(object):
             if monster.distance_to(player) >= 2:
                 monster.move_towards(player.x, player.y)
             elif player.fighter.hp > 0:
-                print('Monster has attacked!')
+                monster.fighter.attack(player)
 
 
 def player_move_or_attack(dx, dy):
@@ -237,16 +260,15 @@ def player_move_or_attack(dx, dy):
 
     target = None
     for obj in objects:
-        if obj.x == x and obj.y == y:
+        if obj.fighter and obj.x == x and obj.y == y:
             target = obj
             break
 
     if target is not None:
-        print("Cannot attack " + target.name)
+        player.fighter.attack(target)
     else:
         player.move(dx, dy)
         fov_recompute = True
-
 
 
 # uuuugh scoping
@@ -274,12 +296,34 @@ def handle_keys():
         'didnt-take-turn'  # TODO: Enum
 
 
+def player_death(_):
+    global game_state
+    print('You died!')
+    game_state = 'dead'  # TODO: Enum
+
+    player.char = '%'
+    player.color = libtcod.dark_red
+
+
+def monster_death(monster):
+    print(monster.name.capitalize() + ' is dead!')
+    monster.char = '%'
+    monster.color = libtcod.dark_red
+    monster.blocks = False
+    monster.fighter = None
+    monster.ai = None
+    monster.name = 'Remains of ' + monster.name
+    monster.send_to_back()
+
+
 def render_all():
     # TODO: scope
     global fov_recompute
 
     for o in objects:
-        o.draw()
+        if o != player:
+            o.draw()
+    player.draw()
 
     if fov_recompute:
         fov_recompute = False
@@ -305,6 +349,10 @@ def render_all():
 
     libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
 
+    libtcod.console_set_default_foreground(con, libtcod.white)
+    libtcod.console_print_ex(0, 1, SCREEN_HEIGHT - 2, libtcod.BKGND_NONE, libtcod.LEFT,
+                             'HP: ' + str(player.fighter.hp) + '/' + str(player.fighter.max_hp))
+
 
 def clear_objects():
     for o in objects:
@@ -324,7 +372,7 @@ libtcod.sys_set_fps(LIMIT_FPS)
 
 # Initialize Object objects
 # TODO: Rename Object lol
-player_fighter = Fighter(hp=30, defense=2, power=5)
+player_fighter = Fighter(hp=30, defense=2, power=5, death_function=player_death)
 player = Object(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, '@', 'player', libtcod.white, blocks=True, fighter=player_fighter)
 objects = [player]
 
@@ -344,6 +392,7 @@ fov_recompute = True
 
 # Main loop (what is exit fn?)
 while not libtcod.console_is_window_closed():
+    print('turn!')
     libtcod.console_set_default_foreground(0, libtcod.white)
 
     render_all()
