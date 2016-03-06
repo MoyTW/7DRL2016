@@ -21,6 +21,8 @@ MSG_HEIGHT = PANEL_HEIGHT - 1
 INVENTORY_WIDTH = 50
 
 HEAL_AMOUNT = 4
+LIGHTNING_RANGE = 5
+LIGHTNING_DAMAGE = 20
 
 # ================================================== MAP SECTION =================================================
 MAP_WIDTH = 80
@@ -128,8 +130,16 @@ def place_objects(room):
         y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
 
         if not is_blocked(x, y):
-            item_component = Item(use_function=cast_heal)
-            item = Object(x, y, '!', 'healing potion', libtcod.violet, item=item_component)
+            d100 = libtcod.random_get_int(0, 0, 100)
+
+            # 70% heal potion
+            if d100 < 70:
+                item_component = Item(use_function=cast_heal)
+                item = Object(x, y, '!', 'healing potion', libtcod.violet, item=item_component)
+            # 30% lightning
+            else:
+                item_component = Item(use_function=cast_lightning)
+                item = Object(x, y, '#', 'scroll of lightning bolt', libtcod.light_yellow, item=item_component)
 
             objects.append(item)
             item.send_to_back()
@@ -295,7 +305,7 @@ class Fighter(object):
         if damage > 0:
             self.hp -= damage
 
-        if self.hp == 0:
+        if self.hp <= 0:
             function = self.death_function
             if function is not None:
                 function(self.owner)
@@ -473,6 +483,31 @@ def cast_heal():
 
     message('You are healed for ' + str(HEAL_AMOUNT) + '!', libtcod.light_violet)
     player.fighter.heal(HEAL_AMOUNT)
+
+
+def closest_monster(max_range):
+    closest_enemy = None
+    closest_dist = max_range + 1
+
+    for obj in objects:
+        if obj.fighter and not obj == player and libtcod.map_is_in_fov(fov_map, obj.x, obj.y):
+            dist = player.distance_to(obj)
+            if dist <= closest_dist:
+                closest_enemy = obj
+                closest_dist = dist
+
+    return closest_enemy
+
+
+def cast_lightning():
+    monster = closest_monster(LIGHTNING_RANGE)
+
+    if monster is None:
+        message('No valid targets for Lignting spell!', libtcod.red)
+        return 'cancelled'  # TODO: fix this
+
+    message('Lightning used on ' + monster.name + ' for ' + str(LIGHTNING_DAMAGE) + ' damage!', libtcod.light_yellow)
+    monster.fighter.take_damage(LIGHTNING_DAMAGE)
 
 
 def render_all():
