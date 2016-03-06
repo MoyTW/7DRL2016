@@ -20,6 +20,8 @@ MSG_HEIGHT = PANEL_HEIGHT - 1
 
 INVENTORY_WIDTH = 50
 
+HEAL_AMOUNT = 4
+
 # ================================================== MAP SECTION =================================================
 MAP_WIDTH = 80
 MAP_HEIGHT = 43
@@ -126,7 +128,7 @@ def place_objects(room):
         y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
 
         if not is_blocked(x, y):
-            item_component = Item()
+            item_component = Item(use_function=cast_heal)
             item = Object(x, y, '!', 'healing potion', libtcod.violet, item=item_component)
 
             objects.append(item)
@@ -298,6 +300,11 @@ class Fighter(object):
             if function is not None:
                 function(self.owner)
 
+    def heal(self, amount):
+        self.hp += amount
+        if self.hp > self.max_hp:
+            self.hp = self.max_hp
+
 
 class BasicMonster(object):
     def take_turn(self):
@@ -310,6 +317,9 @@ class BasicMonster(object):
 
 
 class Item(object):
+    def __init__(self, use_function=None):
+        self.use_function = use_function
+
     def pick_up(self):
         if len(inventory) >= 26:
             message('Your inventory is full! Cannot pick up ' + self.owner.name + '.', libtcod.red)
@@ -317,6 +327,13 @@ class Item(object):
             inventory.append(self.owner)
             objects.remove(self.owner)
             message('You picked up a ' + self.owner.name + '!', libtcod.green)
+
+    def use(self):
+        if self.use_function is None:
+            message('The ' + self.owner.name + ' cannot be used!')
+        else:
+            if self.use_function() != 'cancelled':  # TODO: please stop using strings for this!
+                inventory.remove(self.owner)
 
 
 def player_move_or_attack(dx, dy):
@@ -370,6 +387,12 @@ def menu(header, options, width):
     libtcod.console_flush()
     k = libtcod.console_wait_for_keypress(True)
 
+    # return selection
+    index = k.c - ord('a')
+    if 0 <= index < len(options):
+        return index
+    return None
+
 
 def inventory_menu(header):
     if len(inventory) == 0:
@@ -378,6 +401,9 @@ def inventory_menu(header):
         options = [item.name for item in inventory]
 
     index = menu(header, options, INVENTORY_WIDTH)
+    if index is None or len(inventory) == 0:
+        return None
+    return inventory[index].item
 
 
 # uuuugh scoping
@@ -413,6 +439,8 @@ def handle_keys():
             # Elif?
             if key_char == 'i':
                 chosen_item = inventory_menu('Press the key next to an item to use it, or any other to cancel.\n')
+                if chosen_item is not None:
+                    chosen_item.use()
 
             return 'didnt-take-turn'  # TODO: Enum
 
@@ -435,6 +463,16 @@ def monster_death(monster):
     monster.ai = None
     monster.name = 'Remains of ' + monster.name
     monster.send_to_back()
+
+
+# TODO: Generalize to target
+def cast_heal():
+    if player.fighter.hp == player.fighter.max_hp:
+        message('You are already at full health!', libtcod.red)
+        return 'cancelled'  # TODO: const not str
+
+    message('You are healed for ' + str(HEAL_AMOUNT) + '!', libtcod.light_violet)
+    player.fighter.heal(HEAL_AMOUNT)
 
 
 def render_all():
