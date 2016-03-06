@@ -16,6 +16,8 @@ ROOM_MAX_SIZE = 10
 ROOM_MIN_SIZE = 6
 MAX_ROOMS = 30
 
+MAX_ROOM_MONSTERS = 3
+
 color_dark_wall = libtcod.Color(0, 0, 100)
 color_light_wall = libtcod.Color(130, 110, 50)
 color_dark_ground = libtcod.Color(50, 50, 100)
@@ -72,6 +74,21 @@ def create_v_tunnel(y1, y2, x):
         game_map[x][y].block_sight = False
 
 
+def place_objects(room):
+    num_monsters = libtcod.random_get_int(0, 0, MAX_ROOM_MONSTERS)
+
+    for _ in range(num_monsters):
+        x = libtcod.random_get_int(0, room.x1 + 1, room.x2 - 1)
+        y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
+
+        if libtcod.random_get_int(0, 0, 100) < 80:
+            monster = Object(x, y, 'o', libtcod.desaturated_green)
+        else:
+            monster = Object(x, y, 'T', libtcod.darker_green)
+
+        objects.append(monster)
+
+
 def make_game_map():
     # OH GOD! WHAT IS SCOPE EVEN
     global game_map
@@ -103,6 +120,8 @@ def make_game_map():
         if not failed:
             create_room(new_room)
             (new_x, new_y) = new_room.center()
+
+            place_objects(new_room)
 
             if num_rooms == 0:
                 player.x = new_x
@@ -160,8 +179,7 @@ libtcod.sys_set_fps(LIMIT_FPS)
 # Initialize Object objects
 # TODO: Rename Object lol
 player = Object(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, '@', libtcod.white)
-npc = Object(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 'N', libtcod.blue)
-objects = [npc, player]
+objects = [player]
 
 
 # uuuugh scoping
