@@ -1,4 +1,5 @@
 import libtcodpy as libtcod
+import math
 
 SCREEN_WIDTH = 80
 SCREEN_HEIGHT = 50
@@ -92,9 +93,17 @@ def place_objects(room):
 
         if not is_blocked(x, y):
             if libtcod.random_get_int(0, 0, 100) < 80:
-                monster = Object(x, y, 'o', 'orc', libtcod.desaturated_green, blocks=True)
+                fighter_component = Fighter(hp=10, defense=0, power=3)
+                ai_component = BasicMonster()
+
+                monster = Object(x, y, 'o', 'orc', libtcod.desaturated_green, blocks=True, fighter=fighter_component,
+                                 ai=ai_component)
             else:
-                monster = Object(x, y, 'T', 'troll', libtcod.darker_green, blocks=True)
+                fighter_component = Fighter(hp=10, defense=0, power=3)
+                ai_component = BasicMonster()
+
+                monster = Object(x, y, 'T', 'troll', libtcod.darker_green, blocks=True, fighter=fighter_component,
+                                 ai=ai_component)
 
             objects.append(monster)
 
@@ -153,19 +162,43 @@ def make_game_map():
 
 # Object is using 'con' as the buffer, which is unbound! Does that...work?
 class Object(object):
-    def __init__(self, x, y, char, name, color, blocks=False):
+    def __init__(self, x, y, char, name, color, blocks=False, fighter=None, ai=None):
         self.x = x
         self.y = y
         self.char = char
         self.name = name
         self.color = color
         self.blocks = blocks
+        self.fighter = fighter
+
+        if self.fighter:
+            self.fighter.owner = self
+        self.ai = ai
+
+        if self.ai:
+            self.ai.owner = self
 
     def move(self, dx, dy):
         # SCOPING DEAR OH GOD WHY FIX THIS AFTER THE TUTORIAL
         if not is_blocked(self.x + dx, self.y + dy):
             self.x += dx
             self.y += dy
+
+    # TODO: Pull AI logic out of base Object class!
+    # TODO: Take other instead of x/y!
+    def move_towards(self, target_x, target_y):
+        dx = target_x - self.x
+        dy = target_y - self.y
+        distance = math.sqrt(dx ** 2 + dy ** 2)
+
+        dx = int(round(dx / distance))
+        dy = int(round(dy / distance))
+        self.move(dx, dy)
+
+    def distance_to(self, other):
+        dx = other.x - self.x
+        dy = other.y - self.y
+        return math.sqrt(dx ** 2 + dy ** 2)
 
     # TODO: Have draw take the buffer to draw to as a parameter!
     def draw(self):
@@ -176,6 +209,24 @@ class Object(object):
     # TODO: Have clear take the buffer to draw to as a parameter!
     def clear(self):
         libtcod.console_put_char(con, self.x, self.y, ' ', libtcod.BKGND_NONE)
+
+
+class Fighter(object):
+    def __init__(self, hp, defense, power):
+        self.max_hp = hp
+        self.hp = hp
+        self.defense = defense
+        self.power = power
+
+
+class BasicMonster(object):
+    def take_turn(self):
+        monster = self.owner
+        if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
+            if monster.distance_to(player) >= 2:
+                monster.move_towards(player.x, player.y)
+            elif player.fighter.hp > 0:
+                print('Monster has attacked!')
 
 
 def player_move_or_attack(dx, dy):
@@ -273,7 +324,8 @@ libtcod.sys_set_fps(LIMIT_FPS)
 
 # Initialize Object objects
 # TODO: Rename Object lol
-player = Object(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, '@', 'player', libtcod.white, blocks=True)
+player_fighter = Fighter(hp=30, defense=2, power=5)
+player = Object(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, '@', 'player', libtcod.white, blocks=True, fighter=player_fighter)
 objects = [player]
 
 # Init before main loop
@@ -304,5 +356,5 @@ while not libtcod.console_is_window_closed():
 
     if game_state == 'playing' and player_action != 'didnt-take-turn':
         for o in objects:
-            if o != player:
-                print('The ' + o.name + ' growls!')
+            if o.ai:
+                o.ai.take_turn()
