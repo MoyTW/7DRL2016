@@ -318,9 +318,8 @@ def handle_keys():
             player_move_or_attack(-1, 0)
         elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
             player_move_or_attack(1, 0)
-
-    else:
-        'didnt-take-turn'  # TODO: Enum
+        else:
+            return 'didnt-take-turn'  # TODO: Enum
 
 
 def player_death(_):
