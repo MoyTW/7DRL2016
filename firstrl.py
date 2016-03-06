@@ -27,6 +27,7 @@ ROOM_MIN_SIZE = 6
 MAX_ROOMS = 30
 
 MAX_ROOM_MONSTERS = 3
+MAX_ROOM_ITEMS = 2
 
 color_dark_wall = libtcod.Color(0, 0, 100)
 color_light_wall = libtcod.Color(130, 110, 50)
@@ -94,8 +95,8 @@ def create_v_tunnel(y1, y2, x):
 
 
 def place_objects(room):
+    # Place monsters
     num_monsters = libtcod.random_get_int(0, 0, MAX_ROOM_MONSTERS)
-
     for _ in range(num_monsters):
         x = libtcod.random_get_int(0, room.x1 + 1, room.x2 - 1)
         y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
@@ -115,6 +116,19 @@ def place_objects(room):
                                  ai=ai_component)
 
             objects.append(monster)
+
+    # Place items
+    num_items = libtcod.random_get_int(0, 0, MAX_ROOM_ITEMS)
+    for _ in range(num_items):
+        x = libtcod.random_get_int(0, room.x1 + 1, room.x2 - 1)
+        y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
+
+        if not is_blocked(x, y):
+            item_component = Item()
+            item = Object(x, y, '!', 'healing potion', libtcod.violet, item=item_component)
+
+            objects.append(item)
+            item.send_to_back()
 
 
 def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
@@ -199,21 +213,25 @@ def make_game_map():
 
 # Object is using 'con' as the buffer, which is unbound! Does that...work?
 class Object(object):
-    def __init__(self, x, y, char, name, color, blocks=False, fighter=None, ai=None):
+    def __init__(self, x, y, char, name, color, blocks=False, fighter=None, ai=None, item=None):
         self.x = x
         self.y = y
         self.char = char
         self.name = name
         self.color = color
         self.blocks = blocks
-        self.fighter = fighter
 
+        self.fighter = fighter
         if self.fighter:
             self.fighter.owner = self
-        self.ai = ai
 
+        self.ai = ai
         if self.ai:
             self.ai.owner = self
+
+        self.item = item
+        if self.item:
+            self.item.owner = self
 
     def move(self, dx, dy):
         # SCOPING DEAR OH GOD WHY FIX THIS AFTER THE TUTORIAL
@@ -289,6 +307,16 @@ class BasicMonster(object):
                 monster.fighter.attack(player)
 
 
+class Item(object):
+    def pick_up(self):
+        if len(inventory) >= 26:
+            message('Your inventory is full! Cannot pick up ' + self.owner.name + '.', libtcod.red)
+        else:
+            inventory.append(self.owner)
+            objects.remove(self.owner)
+            message('You picked up a ' + self.owner.name + '!', libtcod.green)
+
+
 def player_move_or_attack(dx, dy):
     global fov_recompute
 
@@ -328,6 +356,16 @@ def handle_keys():
         elif key.vk == libtcod.KEY_RIGHT:
             player_move_or_attack(1, 0)
         else:
+            # Test for other keys? What?
+            key_char = chr(key.c)
+
+            # Items don't take a turn to pick up right now
+            if key_char == 'g':
+                for o in objects:
+                    if o.x == player.x and o.y == player.y and o.item:
+                        o.item.pick_up()
+                        break
+
             return 'didnt-take-turn'  # TODO: Enum
 
 
@@ -438,6 +476,8 @@ libtcod.sys_set_fps(LIMIT_FPS)
 player_fighter = Fighter(hp=30, defense=2, power=5, death_function=player_death)
 player = Object(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, '@', 'player', libtcod.white, blocks=True, fighter=player_fighter)
 objects = [player]
+
+inventory = []
 
 # Init before main loop
 make_game_map()
