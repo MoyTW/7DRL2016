@@ -36,3 +36,6 @@ target/
 
 # dotenv
 .env
+
+# Save game file
+save_game

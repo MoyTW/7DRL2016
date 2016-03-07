@@ -1,6 +1,7 @@
 import libtcodpy as libtcod
 import math
 import textwrap
+import shelve
 
 SCREEN_WIDTH = 80
 SCREEN_HEIGHT = 50
@@ -458,6 +459,10 @@ def inventory_menu(header):
     return inventory[index].item
 
 
+def msgbox(text, width=50):
+    menu(text, [], width)
+
+
 # uuuugh scoping
 def handle_keys():
     # TODO: scope
@@ -615,6 +620,32 @@ def cast_confuse():
     message('Confused ' + monster.name + '!', libtcod.light_blue)
 
 
+def save_game():
+    save_file = shelve.open('save_game', 'n')
+    save_file['game_map'] = game_map
+    save_file['objects'] = objects
+    save_file['player_index'] = objects.index(player)
+    save_file['inventory'] = inventory
+    save_file['game_msgs'] = game_msgs
+    save_file['game_state'] = game_state
+    save_file.close()
+
+
+def load_game():
+    global game_map, objects, player, inventory, game_msgs, game_state
+
+    save_file = shelve.open('save_game', 'r')
+    game_map = save_file['game_map']
+    objects = save_file['objects']
+    player = objects[save_file['player_index']]
+    inventory = save_file['inventory']
+    game_msgs = save_file['game_msgs']
+    game_state = save_file['game_state']
+    save_file.close()
+
+    initialize_fov()
+
+
 def render_all():
     # TODO: scope
     global fov_recompute
@@ -730,6 +761,7 @@ def play_game():
 
         player_action = handle_keys()
         if player_action == 'exit':
+            save_game()
             break
 
         if game_state == 'playing' and player_action != 'didnt-take-turn':
@@ -754,6 +786,13 @@ def main_menu():
         choice = menu('', ['New game', 'Continue game', 'Quit'], 24)
         if choice == 0:
             new_game()
+            play_game()
+        elif choice == 1:
+            try:
+                load_game()
+            except:
+                msgbox('\n Error loading game.\n', 24)
+                continue
             play_game()
         elif choice == 2:
             break
