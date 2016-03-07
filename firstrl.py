@@ -117,7 +117,8 @@ def place_objects(room):
     item_chances = {'heal': 35,
                     'lightning': from_dungeon_level([[15, 1], [30, 3], [45, 5]]),
                     'fireball': from_dungeon_level([[5, 2], [25, 5]]),
-                    'confuse': from_dungeon_level([[5, 3], [25, 6]])}  # TODO: Enum?
+                    'confuse': from_dungeon_level([[5, 3], [25, 6]]),
+                    'sword': 25}  # TODO: Enum?
 
     num_monsters = libtcod.random_get_int(0, 0, max_monsters)
     for _ in range(num_monsters):
@@ -165,6 +166,9 @@ def place_objects(room):
                 item_component = Item(use_function=cast_confuse)
                 item = Object(x, y, '#', 'scroll of confuse', libtcod.light_blue, always_visible=True,
                               item=item_component)
+            elif choice == 'sword':
+                equipment_component = Equipment(slot='right hand')  # TODO: Slot as string
+                item = Object(x, y, '/', 'sword', libtcod.sky, equipment=equipment_component)
 
             objects.append(item)
             item.send_to_back()
@@ -295,7 +299,8 @@ def from_dungeon_level(table):
 
 # Object is using 'con' as the buffer, which is unbound! Does that...work?
 class Object(object):
-    def __init__(self, x, y, char, name, color, blocks=False, always_visible=False, fighter=None, ai=None, item=None):
+    def __init__(self, x, y, char, name, color, blocks=False, always_visible=False, fighter=None, ai=None, item=None,
+                 equipment=None):
         self.x = x
         self.y = y
         self.char = char
@@ -314,6 +319,16 @@ class Object(object):
 
         self.item = item
         if self.item:
+            self.item.owner = self
+
+        self.equipment = equipment
+        if self.equipment:
+            self.equipment.owner = self
+
+            # TODO: Equipment must have an Item as well - bit of a mess here!
+            if self.item:
+                raise ValueError('Cannot construct with an Item and Equipment! Use Equipment only!')
+            self.item = Item()
             self.item.owner = self
 
     def move(self, dx, dy):
@@ -430,6 +445,11 @@ class Item(object):
             message('You picked up a ' + self.owner.name + '!', libtcod.green)
 
     def use(self):
+        # TODO: Special case for equipment - a bit of a mess!
+        if self.owner.equipment:
+            self.owner.equipment.toggle_equip()
+            return
+
         if self.use_function is None:
             message('The ' + self.owner.name + ' cannot be used!')
         else:
@@ -442,6 +462,28 @@ class Item(object):
         self.owner.x = player.x
         self.owner.y = player.y
         self.owner.send_to_back()
+
+
+class Equipment(object):
+    def __init__(self, slot):
+        self.slot = slot
+        self.is_equipped = False
+
+    def toggle_equip(self):
+        if self.is_equipped:
+            self.dequip()
+        else:
+            self.equip()
+
+    def equip(self):
+        self.is_equipped = True
+        message('Equipped ' + self.owner.name + ' on ' + self.slot + '.', libtcod.light_green)
+
+    def dequip(self):
+        if not self.is_equipped:
+            return
+        self.is_equipped = False
+        message('Dequipped ' + self.owner.name + ' on ' + self.slot + '.', libtcod.light_yellow)
 
 
 def player_move_or_attack(dx, dy):
