@@ -374,6 +374,13 @@ class Item(object):
             if self.use_function() != 'cancelled':  # TODO: please stop using strings for this!
                 inventory.remove(self.owner)
 
+    def drop(self):
+        objects.append(self.owner)
+        inventory.remove(self.owner)
+        self.owner.x = player.x
+        self.owner.y = player.y
+        self.owner.send_to_back()
+
 
 def player_move_or_attack(dx, dy):
     global fov_recompute
@@ -480,6 +487,12 @@ def handle_keys():
                 chosen_item = inventory_menu('Press the key next to an item to use it, or any other to cancel.\n')
                 if chosen_item is not None:
                     chosen_item.use()
+
+            # Elif?
+            if key_char == 'd':
+                chosen_item = inventory_menu('Press the key next to an item to drop it, or any other to cancel.\n')
+                if chosen_item is not None:
+                    chosen_item.drop()
 
             return 'didnt-take-turn'  # TODO: Enum
 
