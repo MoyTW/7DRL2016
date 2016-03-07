@@ -43,9 +43,6 @@ ROOM_MAX_SIZE = 10
 ROOM_MIN_SIZE = 6
 MAX_ROOMS = 30
 
-MAX_ROOM_MONSTERS = 3
-MAX_ROOM_ITEMS = 2
-
 color_dark_wall = libtcod.Color(0, 0, 100)
 color_light_wall = libtcod.Color(130, 110, 50)
 color_dark_ground = libtcod.Color(50, 50, 100)
@@ -112,11 +109,17 @@ def create_v_tunnel(y1, y2, x):
 
 
 def place_objects(room):
-    monster_chances = {'orc': 80, 'troll': 20}  # TODO: Enum?
-    item_chances = {'heal': 70, 'lightning': 10, 'fireball': 10, 'confuse': 10}  # TODO: Enum?
+    max_monsters = from_dungeon_level([[2, 1], [3, 4], [5, 6]])
+    monster_chances = {'orc': 80,
+                       'troll': from_dungeon_level([[15, 3], [30, 5], [60, 7]])}  # TODO: Enum?
 
-    # Place monsters
-    num_monsters = libtcod.random_get_int(0, 0, MAX_ROOM_MONSTERS)
+    max_items = from_dungeon_level([[2, 1], [3, 4]])
+    item_chances = {'heal': 35,
+                    'lightning': from_dungeon_level([[15, 1], [30, 3], [45, 5]]),
+                    'fireball': from_dungeon_level([[5, 2], [25, 5]]),
+                    'confuse': from_dungeon_level([[5, 3], [25, 6]])}  # TODO: Enum?
+
+    num_monsters = libtcod.random_get_int(0, 0, max_monsters)
     for _ in range(num_monsters):
         x = libtcod.random_get_int(0, room.x1 + 1, room.x2 - 1)
         y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
@@ -140,7 +143,7 @@ def place_objects(room):
             objects.append(monster)
 
     # Place items
-    num_items = libtcod.random_get_int(0, 0, MAX_ROOM_ITEMS)
+    num_items = libtcod.random_get_int(0, 0, max_items)
     for _ in range(num_items):
         x = libtcod.random_get_int(0, room.x1 + 1, room.x2 - 1)
         y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
@@ -276,6 +279,18 @@ def random_choice(chances_dict):
     chances = chances_dict.values()
     strings = chances_dict.keys()
     return strings[random_choice_index(chances)]
+
+
+# TODO: Pass the dang thing in
+def from_dungeon_level(table):
+    """Given a table, return the value for the current dungeon level.
+    :param table: The table, formatted as a list of [value, level] pairs.
+    :return: The value for the current dungeon level
+    """
+    for (value, level) in reversed(table):
+        if dungeon_level >= level:
+            return value
+    return 0
 
 
 # Object is using 'con' as the buffer, which is unbound! Does that...work?
