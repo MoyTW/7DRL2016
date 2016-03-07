@@ -408,7 +408,11 @@ def menu(header, options, width):
         raise ValueError('Max menu options is 26 (a-z)')
 
     # Determine height of menu, in number of lines
-    header_height = libtcod.console_get_height_rect(con, 0, 0, width, SCREEN_HEIGHT, header)
+    if header == '':
+        header_height = 0
+    else:
+        header_height = libtcod.console_get_height_rect(con, 0, 0, width, SCREEN_HEIGHT, header)
+
     height = len(options) + header_height
 
     window = libtcod.console_new(width, height)
@@ -708,6 +712,8 @@ def initialize_fov():
         for x in range(MAP_WIDTH):
             libtcod.map_set_properties(fov_map, x, y, not game_map[x][y].block_sight, not game_map[x][y].blocked)
 
+    libtcod.console_clear(con)
+
 
 def play_game():
     global key, mouse
@@ -732,6 +738,26 @@ def play_game():
                     o.ai.take_turn()
 
 
+def main_menu():
+    img = libtcod.image_load('star.png')
+
+    while not libtcod.console_is_window_closed():
+        # background image
+        libtcod.image_blit_2x(img, 0, 0, 0)
+
+        # title and credits
+        libtcod.console_set_default_foreground(0, libtcod.red)
+        libtcod.console_print_ex(0, SCREEN_WIDTH/2, SCREEN_HEIGHT/2-4, libtcod.BKGND_NONE, libtcod.CENTER, 'TEST GAME')
+        libtcod.console_print_ex(0, SCREEN_WIDTH/2, SCREEN_HEIGHT/2-3, libtcod.BKGND_NONE, libtcod.CENTER, 'by MoyTW')
+
+        # menu + choice
+        choice = menu('', ['New game', 'Continue game', 'Quit'], 24)
+        if choice == 0:
+            new_game()
+            play_game()
+        elif choice == 2:
+            break
+
 # Set font
 libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
 
@@ -743,5 +769,4 @@ panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
 # I don't want this to be real-time, so this line effectively does nothing!
 libtcod.sys_set_fps(LIMIT_FPS)
 
-new_game()
-play_game()
+main_menu()
