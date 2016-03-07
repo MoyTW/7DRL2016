@@ -140,19 +140,21 @@ def place_objects(room):
             # 70% heal potion
             if d100 < 70:
                 item_component = Item(use_function=cast_heal)
-                item = Object(x, y, '!', 'healing potion', libtcod.violet, item=item_component)
+                item = Object(x, y, '!', 'healing potion', libtcod.violet, always_visible=True, item=item_component)
             # 10% lightning
             elif d100 < 70+10:
                 item_component = Item(use_function=cast_lightning)
-                item = Object(x, y, '#', 'scroll of lightning bolt', libtcod.light_yellow, item=item_component)
+                item = Object(x, y, '#', 'scroll of lightning bolt', libtcod.light_yellow, always_visible=True,
+                              item=item_component)
             # 10% fireball
             elif d100 < 80+10:
                 item_component = Item(use_function=cast_fireball)
-                item = Object(x, y, '#', 'scroll of fireball', libtcod.orange, item=item_component)
+                item = Object(x, y, '#', 'scroll of fireball', libtcod.orange, always_visible=True, item=item_component)
             # 10% confuse
             else:
                 item_component = Item(use_function=cast_confuse)
-                item = Object(x, y, '#', 'scroll of confuse', libtcod.light_blue, item=item_component)
+                item = Object(x, y, '#', 'scroll of confuse', libtcod.light_blue, always_visible=True,
+                              item=item_component)
 
             objects.append(item)
             item.send_to_back()
@@ -188,7 +190,7 @@ def get_names_under_mouse():
 
 def make_game_map():
     # OH GOD! WHAT IS SCOPE EVEN
-    global game_map, objects
+    global game_map, objects, stairs
 
     objects = [player]
 
@@ -239,16 +241,22 @@ def make_game_map():
             rooms.append(new_room)
             num_rooms += 1
 
+    # TODO: Having trouble keeping track of scope/assignment!
+    stairs = Object(new_x, new_y, '<', 'stairs', libtcod.white, always_visible=True,)
+    objects.append(stairs)
+    stairs.send_to_back()
+
 
 # Object is using 'con' as the buffer, which is unbound! Does that...work?
 class Object(object):
-    def __init__(self, x, y, char, name, color, blocks=False, fighter=None, ai=None, item=None):
+    def __init__(self, x, y, char, name, color, blocks=False, always_visible=False, fighter=None, ai=None, item=None):
         self.x = x
         self.y = y
         self.char = char
         self.name = name
         self.color = color
         self.blocks = blocks
+        self.always_visible = always_visible
 
         self.fighter = fighter
         if self.fighter:
@@ -289,7 +297,8 @@ class Object(object):
 
     # TODO: Have draw take the buffer to draw to as a parameter!
     def draw(self):
-        if libtcod.map_is_in_fov(fov_map, self.x, self.y):
+        if libtcod.map_is_in_fov(fov_map, self.x, self.y) or \
+                (self.always_visible and game_map[self.x][self.y].explored):
             libtcod.console_set_default_foreground(con, self.color)
             libtcod.console_put_char(con, self.x, self.y, self.char, libtcod.BKGND_NONE)
 
@@ -492,18 +501,20 @@ def handle_keys():
                     if o.x == player.x and o.y == player.y and o.item:
                         o.item.pick_up()
                         break
-
-            # Elif?
-            if key_char == 'i':
+            elif key_char == 'i':
                 chosen_item = inventory_menu('Press the key next to an item to use it, or any other to cancel.\n')
                 if chosen_item is not None:
                     chosen_item.use()
-
-            # Elif?
-            if key_char == 'd':
+            elif key_char == 'd':
                 chosen_item = inventory_menu('Press the key next to an item to drop it, or any other to cancel.\n')
                 if chosen_item is not None:
                     chosen_item.drop()
+            elif key_char == '<':
+                print('Pressed <!')
+                print(str(stairs.x) + ',' + str(stairs.y))
+                print(str(player.x) + ',' + str(player.y))
+                if stairs.x == player.x and stairs.y == player.y:
+                    next_level()
 
             return 'didnt-take-turn'  # TODO: Enum
 
@@ -628,11 +639,13 @@ def save_game():
     save_file['inventory'] = inventory
     save_file['game_msgs'] = game_msgs
     save_file['game_state'] = game_state
+    save_file['stairs_index'] = objects.index(stairs)
+    save_file['dungeon_level'] = dungeon_level
     save_file.close()
 
 
 def load_game():
-    global game_map, objects, player, inventory, game_msgs, game_state
+    global game_map, objects, player, inventory, game_msgs, game_state, stairs, dungeon_level
 
     save_file = shelve.open('save_game', 'r')
     game_map = save_file['game_map']
@@ -641,6 +654,8 @@ def load_game():
     inventory = save_file['inventory']
     game_msgs = save_file['game_msgs']
     game_state = save_file['game_state']
+    stairs = objects[save_file['stairs_index']]
+    dungeon_level = save_file['dungeon_level']
     save_file.close()
 
     initialize_fov()
@@ -692,6 +707,7 @@ def render_all():
 
     # print bars
     render_bar(1, 1, BAR_WIDTH, 'HP', player.fighter.hp, player.fighter.max_hp, libtcod.light_red, libtcod.darker_red)
+    libtcod.console_print_ex(panel, 1, 3, libtcod.BKGND_NONE, libtcod.LEFT, 'Dungeon level: ' + str(dungeon_level))
 
     # print mouselook
     libtcod.console_set_default_foreground(panel, libtcod.light_grey)
@@ -718,12 +734,13 @@ def clear_objects():
 
 # =================================================== MAIN LOOP ==================================================
 def new_game():
-    global player, inventory, game_msgs, game_state
+    global player, inventory, game_msgs, game_state, dungeon_level
 
     player_fighter = Fighter(hp=30, defense=2, power=5, death_function=player_death)
     player = Object(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, '@', 'player', libtcod.white, blocks=True,
                     fighter=player_fighter)
 
+    dungeon_level = 1
     make_game_map()
     initialize_fov()
 
@@ -732,6 +749,18 @@ def new_game():
 
     game_msgs = []
     message('Initial Message')
+
+
+def next_level():
+    global dungeon_level
+
+    message('Healing before going down to the next level.', libtcod.light_violet)
+    player.fighter.heal(player.fighter.max_hp / 2)
+
+    dungeon_level += 1
+    message('Going down! Entering level ' + str(dungeon_level), libtcod.white)
+    make_game_map()
+    initialize_fov()
 
 
 def initialize_fov():
