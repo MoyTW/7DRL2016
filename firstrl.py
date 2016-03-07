@@ -187,7 +187,9 @@ def get_names_under_mouse():
 
 def make_game_map():
     # OH GOD! WHAT IS SCOPE EVEN
-    global game_map
+    global game_map, objects
+
+    objects = [player]
 
     game_map = [[Tile(True)
                  for _ in range(MAP_HEIGHT)]
@@ -678,7 +680,57 @@ def clear_objects():
     for o in objects:
         o.clear()
 
+
 # =================================================== MAIN LOOP ==================================================
+def new_game():
+    global player, inventory, game_msgs, game_state
+
+    player_fighter = Fighter(hp=30, defense=2, power=5, death_function=player_death)
+    player = Object(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, '@', 'player', libtcod.white, blocks=True,
+                    fighter=player_fighter)
+
+    make_game_map()
+    initialize_fov()
+
+    game_state = 'playing'  # TODO: Enum?
+    inventory = []
+
+    game_msgs = []
+    message('Initial Message')
+
+
+def initialize_fov():
+    global fov_recompute, fov_map
+
+    fov_recompute = True
+    fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
+    for y in range(MAP_HEIGHT):
+        for x in range(MAP_WIDTH):
+            libtcod.map_set_properties(fov_map, x, y, not game_map[x][y].block_sight, not game_map[x][y].blocked)
+
+
+def play_game():
+    global key, mouse
+
+    mouse = libtcod.Mouse()
+    key = libtcod.Key()
+    while not libtcod.console_is_window_closed():
+        libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
+        libtcod.console_set_default_foreground(0, libtcod.white)
+
+        render_all()
+        libtcod.console_flush()
+        clear_objects()
+
+        player_action = handle_keys()
+        if player_action == 'exit':
+            break
+
+        if game_state == 'playing' and player_action != 'didnt-take-turn':
+            for o in objects:
+                if o.ai:
+                    o.ai.take_turn()
+
 
 # Set font
 libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
@@ -691,49 +743,5 @@ panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
 # I don't want this to be real-time, so this line effectively does nothing!
 libtcod.sys_set_fps(LIMIT_FPS)
 
-# Initialize Object objects
-# TODO: Rename Object lol
-player_fighter = Fighter(hp=30, defense=2, power=5, death_function=player_death)
-player = Object(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, '@', 'player', libtcod.white, blocks=True, fighter=player_fighter)
-objects = [player]
-
-inventory = []
-
-# Init before main loop
-make_game_map()
-
-game_state = 'playing'  # TODO: Enum?
-player_action = None
-
-fov_recompute = True
-fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
-for g_y in range(MAP_HEIGHT):
-    for g_x in range(MAP_WIDTH):
-        libtcod.map_set_properties(fov_map, g_x, g_y, not game_map[g_x][g_y].block_sight,
-                                   not game_map[g_x][g_y].blocked)
-
-game_msgs = []
-message('Initial Message')
-
-mouse = libtcod.Mouse()
-key = libtcod.Key()
-
-# Main loop (what is exit fn?)
-while not libtcod.console_is_window_closed():
-    print('turn!')
-    libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
-    libtcod.console_set_default_foreground(0, libtcod.white)
-
-    render_all()
-    libtcod.console_flush()
-    clear_objects()
-
-    player_action = handle_keys()
-    if player_action == 'exit':
-        break
-
-    print(player_action)
-    if game_state == 'playing' and player_action != 'didnt-take-turn':
-        for o in objects:
-            if o.ai:
-                o.ai.take_turn()
+new_game()
+play_game()
