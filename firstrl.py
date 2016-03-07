@@ -523,6 +523,17 @@ def target_tile(max_range=None):
             return x, y
 
 
+def target_monster(max_range=None):
+    while True:
+        (x, y) = target_tile(max_range)
+        if x is None:
+            return None
+
+        for obj in objects:
+            if obj.x == x and obj.y == y and obj.fighter and obj != player:  # TODO: Make this check a function
+                return obj
+
+
 # TODO: Generalize to target
 def cast_heal():
     if player.fighter.hp == player.fighter.max_hp:
@@ -573,10 +584,11 @@ def cast_fireball():
 
 
 def cast_confuse():
-    monster = closest_monster(CONFUSE_RANGE)
+    message('Left-click on the confuse target, ESC/right-click to cancel.', libtcod.light_blue)
+    monster = target_monster(CONFUSE_RANGE)
     if monster is None:
-        message('No valid targets for Confuse spell!', libtcod.red)
-        return 'cancelled'  # TODO: fix this
+        message('Confuse cancelled.', libtcod.light_blue)
+        return 'cancelled'  # TODO: enum
 
     old_ai = monster.ai
     monster.ai = ConfusedMonster(old_ai)
