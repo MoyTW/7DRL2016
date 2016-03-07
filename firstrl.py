@@ -112,6 +112,9 @@ def create_v_tunnel(y1, y2, x):
 
 
 def place_objects(room):
+    monster_chances = {'orc': 80, 'troll': 20}  # TODO: Enum?
+    item_chances = {'heal': 70, 'lightning': 10, 'fireball': 10, 'confuse': 10}  # TODO: Enum?
+
     # Place monsters
     num_monsters = libtcod.random_get_int(0, 0, MAX_ROOM_MONSTERS)
     for _ in range(num_monsters):
@@ -119,13 +122,15 @@ def place_objects(room):
         y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
 
         if not is_blocked(x, y):
-            if libtcod.random_get_int(0, 0, 100) < 80:
+            choice = random_choice(monster_chances)
+
+            if choice == 'orc':
                 fighter_component = Fighter(hp=10, defense=0, power=3, xp=35, death_function=monster_death)
                 ai_component = BasicMonster()
 
                 monster = Object(x, y, 'o', 'orc', libtcod.desaturated_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
-            else:
+            elif choice == 'troll':
                 fighter_component = Fighter(hp=10, defense=0, power=3, xp=100, death_function=monster_death)
                 ai_component = BasicMonster()
 
@@ -141,23 +146,19 @@ def place_objects(room):
         y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
 
         if not is_blocked(x, y):
-            d100 = libtcod.random_get_int(0, 0, 100)
+            choice = random_choice(item_chances)
 
-            # 70% heal potion
-            if d100 < 70:
+            if choice == 'heal':
                 item_component = Item(use_function=cast_heal)
                 item = Object(x, y, '!', 'healing potion', libtcod.violet, always_visible=True, item=item_component)
-            # 10% lightning
-            elif d100 < 70+10:
+            elif choice == 'lightning':
                 item_component = Item(use_function=cast_lightning)
                 item = Object(x, y, '#', 'scroll of lightning bolt', libtcod.light_yellow, always_visible=True,
                               item=item_component)
-            # 10% fireball
-            elif d100 < 80+10:
+            elif choice == 'fireball':
                 item_component = Item(use_function=cast_fireball)
                 item = Object(x, y, '#', 'scroll of fireball', libtcod.orange, always_visible=True, item=item_component)
-            # 10% confuse
-            else:
+            elif choice == 'confuse':
                 item_component = Item(use_function=cast_confuse)
                 item = Object(x, y, '#', 'scroll of confuse', libtcod.light_blue, always_visible=True,
                               item=item_component)
@@ -251,6 +252,30 @@ def make_game_map():
     stairs = Object(new_x, new_y, '<', 'stairs', libtcod.white, always_visible=True,)
     objects.append(stairs)
     stairs.send_to_back()
+
+
+def random_choice_index(chances):
+    """ Given a list of probabilities, chooses the index of one according to their values. Technically can take any list
+    of numbers, but probabilities are the most intuitive.
+
+    :param chances: The list of probabilities (i.e. [15, 20, 15, 50])
+    :return: The index of the chosen probability
+    """
+    dice = libtcod.random_get_int(0, 1, sum(chances))
+
+    running_sum = 0
+    choice = 0
+    for w in chances:
+        running_sum += w
+        if dice <= running_sum:
+            return choice
+        choice += 1
+
+
+def random_choice(chances_dict):
+    chances = chances_dict.values()
+    strings = chances_dict.keys()
+    return strings[random_choice_index(chances)]
 
 
 # Object is using 'con' as the buffer, which is unbound! Does that...work?
