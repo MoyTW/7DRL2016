@@ -29,6 +29,12 @@ CONFUSE_RANGE = 8
 FIREBALL_RADIUS = 3
 FIREBALL_DAMAGE = 12
 
+LEVEL_UP_BASE = 200
+LEVEL_UP_FACTOR = 150
+LEVEL_SCREEN_WIDTH = 40
+
+CHARACTER_SCREEN_WIDTH = 30
+
 # ================================================== MAP SECTION =================================================
 MAP_WIDTH = 80
 MAP_HEIGHT = 43
@@ -114,13 +120,13 @@ def place_objects(room):
 
         if not is_blocked(x, y):
             if libtcod.random_get_int(0, 0, 100) < 80:
-                fighter_component = Fighter(hp=10, defense=0, power=3, death_function=monster_death)
+                fighter_component = Fighter(hp=10, defense=0, power=3, xp=35, death_function=monster_death)
                 ai_component = BasicMonster()
 
                 monster = Object(x, y, 'o', 'orc', libtcod.desaturated_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
             else:
-                fighter_component = Fighter(hp=10, defense=0, power=3, death_function=monster_death)
+                fighter_component = Fighter(hp=10, defense=0, power=3, xp=100, death_function=monster_death)
                 ai_component = BasicMonster()
 
                 monster = Object(x, y, 'T', 'troll', libtcod.darker_green, blocks=True, fighter=fighter_component,
@@ -313,11 +319,12 @@ class Object(object):
 
 
 class Fighter(object):
-    def __init__(self, hp, defense, power, death_function=None):
+    def __init__(self, hp, defense, power, xp, death_function=None):
         self.max_hp = hp
         self.hp = hp
         self.defense = defense
         self.power = power
+        self.xp = xp
         self.death_function = death_function
 
     def attack(self, target):
@@ -336,6 +343,9 @@ class Fighter(object):
             function = self.death_function
             if function is not None:
                 function(self.owner)
+                # TODO: Don't overload xp to be both how much you have and how much you're worth!
+                if self.owner != player:
+                    player.fighter.xp += self.xp
 
     def heal(self, amount):
         self.hp += amount
@@ -515,8 +525,38 @@ def handle_keys():
                 print(str(player.x) + ',' + str(player.y))
                 if stairs.x == player.x and stairs.y == player.y:
                     next_level()
+            elif key_char == 'c':
+                level_up_xp = LEVEL_UP_BASE + player.level * LEVEL_UP_FACTOR
+                msgbox('Character Information\n\nLevel: ' + str(player.level) + '\nExperience: ' +
+                       str(player.fighter.xp) + '\nExperience to level up: ' + str(level_up_xp) + '\n\nMaximum HP: ' +
+                       str(player.fighter.max_hp) + '\nAttack: ' + str(player.fighter.power) + '\nDefense: ' +
+                       str(player.fighter.defense),
+                       CHARACTER_SCREEN_WIDTH)
 
             return 'didnt-take-turn'  # TODO: Enum
+
+
+def check_level_up():
+    level_up_xp = LEVEL_UP_BASE + player.level * LEVEL_UP_FACTOR
+    if player.fighter.xp >= level_up_xp:
+        player.level += 1
+        player.fighter.xp -= level_up_xp
+        message('Level up. Now level ' + str(player.level) + '!', libtcod.green)
+
+        choice = None
+        while choice is None:
+            choice = menu('Level up! Choose a stat to raise:\n',
+                          ['HP + 20, (from ' + str(player.fighter.max_hp) + ')',
+                           'STR + 1, (from ' + str(player.fighter.power) + ')',
+                           'DEF + 1, (from ' + str(player.fighter.defense) + ')'],
+                          LEVEL_SCREEN_WIDTH)
+        if choice == 0:
+            player.fighter.max_hp += 20
+            player.fighter.hp += 20
+        elif choice == 1:
+            player.fighter.power += 1
+        elif choice == 2:
+            player.fighter.defense += 1
 
 
 def player_death(_):
@@ -529,7 +569,7 @@ def player_death(_):
 
 
 def monster_death(monster):
-    message(monster.name.capitalize() + ' is dead!', libtcod.red)
+    message(monster.name.capitalize() + ' is dead! You gain ' + str(monster.fighter.xp) + ' xp!', libtcod.red)
     monster.char = '%'
     monster.color = libtcod.dark_red
     monster.blocks = False
@@ -736,9 +776,11 @@ def clear_objects():
 def new_game():
     global player, inventory, game_msgs, game_state, dungeon_level
 
-    player_fighter = Fighter(hp=30, defense=2, power=5, death_function=player_death)
-    player = Object(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, '@', 'player', libtcod.white, blocks=True,
-                    fighter=player_fighter)
+    player_fighter = Fighter(hp=30, defense=2, power=5, xp=0, death_function=player_death)  # TODO: Don't overload xp!
+    player = Object(0, 0, '@', 'player', libtcod.white, blocks=True, fighter=player_fighter)
+
+    # TODO: Don't just add random properties that's silly.
+    player.level = 1
 
     dungeon_level = 1
     make_game_map()
@@ -786,6 +828,9 @@ def play_game():
 
         render_all()
         libtcod.console_flush()
+
+        check_level_up()
+
         clear_objects()
 
         player_action = handle_keys()
