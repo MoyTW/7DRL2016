@@ -23,6 +23,10 @@ INVENTORY_WIDTH = 50
 HEAL_AMOUNT = 4
 LIGHTNING_RANGE = 5
 LIGHTNING_DAMAGE = 20
+CONFUSE_NUM_TURNS = 10
+CONFUSE_RANGE = 8
+FIREBALL_RADIUS = 3
+FIREBALL_DAMAGE = 12
 
 # ================================================== MAP SECTION =================================================
 MAP_WIDTH = 80
@@ -136,10 +140,18 @@ def place_objects(room):
             if d100 < 70:
                 item_component = Item(use_function=cast_heal)
                 item = Object(x, y, '!', 'healing potion', libtcod.violet, item=item_component)
-            # 30% lightning
-            else:
+            # 10% lightning
+            elif d100 < 70+10:
                 item_component = Item(use_function=cast_lightning)
                 item = Object(x, y, '#', 'scroll of lightning bolt', libtcod.light_yellow, item=item_component)
+            # 10% fireball
+            elif d100 < 80+10:
+                item_component = Item(use_function=cast_fireball)
+                item = Object(x, y, '#', 'scroll of fireball', libtcod.orange, item=item_component)
+            # 10% confuse
+            else:
+                item_component = Item(use_function=cast_confuse)
+                item = Object(x, y, '#', 'scroll of confuse', libtcod.light_blue, item=item_component)
 
             objects.append(item)
             item.send_to_back()
@@ -269,6 +281,9 @@ class Object(object):
         dy = other.y - self.y
         return math.sqrt(dx ** 2 + dy ** 2)
 
+    def distance(self, x, y):
+        return math.sqrt((x - self.x) ** 2 + (y - self.y) ** 2)
+
     # TODO: Have draw take the buffer to draw to as a parameter!
     def draw(self):
         if libtcod.map_is_in_fov(fov_map, self.x, self.y):
@@ -324,6 +339,20 @@ class BasicMonster(object):
                 monster.move_towards(player.x, player.y)
             elif player.fighter.hp > 0:
                 monster.fighter.attack(player)
+
+
+class ConfusedMonster(object):
+    def __init__(self, old_ai, num_turns=CONFUSE_NUM_TURNS):
+        self.old_ai = old_ai
+        self.num_turns = num_turns
+
+    def take_turn(self):
+        if self.num_turns > 0:
+            self.owner.move(libtcod.random_get_int(0, -1, 1), libtcod.random_get_int(0, -1, 1))
+            self.num_turns -= 1
+        else:
+            self.owner.ai = self.old_ai
+            message('The ' + self.owner.name + ' is no longer confused!', libtcod.red)
 
 
 class Item(object):
@@ -475,6 +504,25 @@ def monster_death(monster):
     monster.send_to_back()
 
 
+def target_tile(max_range=None):
+    """Blocks until keypress or click. If the key is ESCAPE or right-click, exits; otherwise waits for a left-click on
+    an in-FOV, in-range tile and returns (x, y) of the tile."""
+    global key, mouse  # TODO: Scoping
+    while True:
+        libtcod.console_flush()
+        libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
+        render_all()
+
+        (x, y) = (mouse.cx, mouse.cy)
+
+        if mouse.rbutton_pressed or key.vk == libtcod.KEY_ESCAPE:
+            return None, None
+
+        if mouse.lbutton_pressed and libtcod.map_is_in_fov(fov_map, x, y) and \
+                (max_range is None or player.distance(x, y) <= max_range):
+            return x, y
+
+
 # TODO: Generalize to target
 def cast_heal():
     if player.fighter.hp == player.fighter.max_hp:
@@ -508,6 +556,32 @@ def cast_lightning():
 
     message('Lightning used on ' + monster.name + ' for ' + str(LIGHTNING_DAMAGE) + ' damage!', libtcod.light_yellow)
     monster.fighter.take_damage(LIGHTNING_DAMAGE)
+
+
+def cast_fireball():
+    message('Left-click a tile to target the Fireball spell, ESC/right-click to cancel.', libtcod.orange)
+    (x, y) = target_tile()
+    if x is None:
+        message('Fireball targeting cancelled.', libtcod.orange)
+        return 'cancelled'  # TODO: Enum
+    message('Fireball at (' + str(x) + ',' + str(y) + ') with radius ' + str(FIREBALL_RADIUS) + '.')
+
+    for obj in objects:
+        if obj.distance(x, y) <= FIREBALL_RADIUS and obj.fighter:
+            message('The ' + obj.name + ' takes ' + str(FIREBALL_DAMAGE) + ' damage from the fireball.', libtcod.orange)
+            obj.fighter.take_damage(FIREBALL_DAMAGE)
+
+
+def cast_confuse():
+    monster = closest_monster(CONFUSE_RANGE)
+    if monster is None:
+        message('No valid targets for Confuse spell!', libtcod.red)
+        return 'cancelled'  # TODO: fix this
+
+    old_ai = monster.ai
+    monster.ai = ConfusedMonster(old_ai)
+    monster.ai.owner = monster
+    message('Confused ' + monster.name + '!', libtcod.light_blue)
 
 
 def render_all():
