@@ -118,7 +118,8 @@ def place_objects(room):
                     'lightning': from_dungeon_level([[15, 1], [30, 3], [45, 5]]),
                     'fireball': from_dungeon_level([[5, 2], [25, 5]]),
                     'confuse': from_dungeon_level([[5, 3], [25, 6]]),
-                    'sword': 25}  # TODO: Enum?
+                    'sword': 25,
+                    'shield': 25}  # TODO: Enum?
 
     num_monsters = libtcod.random_get_int(0, 0, max_monsters)
     for _ in range(num_monsters):
@@ -167,8 +168,11 @@ def place_objects(room):
                 item = Object(x, y, '#', 'scroll of confuse', libtcod.light_blue, always_visible=True,
                               item=item_component)
             elif choice == 'sword':
-                equipment_component = Equipment(slot='right hand')  # TODO: Slot as string
+                equipment_component = Equipment(slot='right hand', power_bonus=3)  # TODO: Slot as string
                 item = Object(x, y, '/', 'sword', libtcod.sky, equipment=equipment_component)
+            elif choice == 'shield':
+                equipment_component = Equipment(slot='left hand', defense_bonus=1)  # TODO: Slot as string
+                item = Object(x, y, '[', 'shield', libtcod.sky, equipment=equipment_component)
 
             objects.append(item)
             item.send_to_back()
@@ -375,12 +379,27 @@ class Object(object):
 
 class Fighter(object):
     def __init__(self, hp, defense, power, xp, death_function=None):
-        self.max_hp = hp
+        self.base_max_hp = hp
         self.hp = hp
-        self.defense = defense
-        self.power = power
+        self.base_defense = defense
+        self.base_power = power
         self.xp = xp
         self.death_function = death_function
+
+    @property
+    def max_hp(self):
+        bonus = sum(equipment.max_hp_bonus for equipment in get_all_equipped(self.owner))
+        return self.base_max_hp + bonus
+
+    @property
+    def defense(self):
+        bonus = sum(equipment.defense_bonus for equipment in get_all_equipped(self.owner))
+        return self.base_defense + bonus
+
+    @property
+    def power(self):
+        bonus = sum(equipment.power_bonus for equipment in get_all_equipped(self.owner))
+        return self.base_power + bonus
 
     def attack(self, target):
         damage = self.power - target.fighter.defense
@@ -474,9 +493,12 @@ class Item(object):
 
 
 class Equipment(object):
-    def __init__(self, slot):
+    def __init__(self, slot, power_bonus=0, defense_bonus=0, max_hp_bonus=0):
         self.slot = slot
         self.is_equipped = False
+        self.power_bonus = power_bonus
+        self.defense_bonus = defense_bonus
+        self.max_hp_bonus = max_hp_bonus
 
     def toggle_equip(self):
         if self.is_equipped:
@@ -505,6 +527,17 @@ def get_equipped_in_slot(slot):
         if obj.equipment and obj.equipment.slot == slot and obj.equipment.is_equipped:
             return obj.equipment
     return None
+
+
+def get_all_equipped(obj):
+    if obj == player:
+        equipped_list = []
+        for item in inventory:
+            if item.equipment and item.equipment.is_equipped:
+                equipped_list.append(item.equipment)
+        return equipped_list
+    else:
+        return []
 
 
 def player_move_or_attack(dx, dy):
@@ -639,9 +672,6 @@ def handle_keys():
                 if chosen_item is not None:
                     chosen_item.drop()
             elif key_char == '<':
-                print('Pressed <!')
-                print(str(stairs.x) + ',' + str(stairs.y))
-                print(str(player.x) + ',' + str(player.y))
                 if stairs.x == player.x and stairs.y == player.y:
                     next_level()
             elif key_char == 'c':
@@ -665,17 +695,17 @@ def check_level_up():
         choice = None
         while choice is None:
             choice = menu('Level up! Choose a stat to raise:\n',
-                          ['HP + 20, (from ' + str(player.fighter.max_hp) + ')',
-                           'STR + 1, (from ' + str(player.fighter.power) + ')',
-                           'DEF + 1, (from ' + str(player.fighter.defense) + ')'],
+                          ['HP + 20, (from ' + str(player.fighter.base_max_hp) + ')',
+                           'STR + 1, (from ' + str(player.fighter.base_power) + ')',
+                           'DEF + 1, (from ' + str(player.fighter.base_defense) + ')'],
                           LEVEL_SCREEN_WIDTH)
         if choice == 0:
-            player.fighter.max_hp += 20
+            player.fighter.base_max_hp += 20
             player.fighter.hp += 20
         elif choice == 1:
-            player.fighter.power += 1
+            player.fighter.base_power += 1
         elif choice == 2:
-            player.fighter.defense += 1
+            player.fighter.base_defense += 1
 
 
 def player_death(_):
@@ -895,7 +925,7 @@ def clear_objects():
 def new_game():
     global player, inventory, game_msgs, game_state, dungeon_level
 
-    player_fighter = Fighter(hp=30, defense=2, power=5, xp=0, death_function=player_death)  # TODO: Don't overload xp!
+    player_fighter = Fighter(hp=30, defense=2, power=2, xp=0, death_function=player_death)  # TODO: Don't overload xp!
     player = Object(0, 0, '@', 'player', libtcod.white, blocks=True, fighter=player_fighter)
 
     # TODO: Don't just add random properties that's silly.
@@ -910,6 +940,13 @@ def new_game():
 
     game_msgs = []
     message('Initial Message')
+
+    # Initial equipment
+    equipment_component = Equipment(slot='right hand', power_bonus=2)
+    obj = Object(0, 0, '-', 'dagger', libtcod.sky, equipment=equipment_component)
+    inventory.append(obj)
+    equipment_component.equip()
+    obj.always_visible = True
 
 
 def next_level():
