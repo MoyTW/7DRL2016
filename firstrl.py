@@ -444,6 +444,11 @@ class Item(object):
             objects.remove(self.owner)
             message('You picked up a ' + self.owner.name + '!', libtcod.green)
 
+            # Auto-equip picked-up items
+            equipment = self.owner.equipment
+            if equipment and get_equipped_in_slot(equipment.slot) is None:
+                equipment.equip()
+
     def use(self):
         # TODO: Special case for equipment - a bit of a mess!
         if self.owner.equipment:
@@ -457,6 +462,10 @@ class Item(object):
                 inventory.remove(self.owner)
 
     def drop(self):
+        # Special case: unequip equipped item before dropping
+        if self.owner.equipment:
+            self.owner.equipment.dequip()
+
         objects.append(self.owner)
         inventory.remove(self.owner)
         self.owner.x = player.x
@@ -476,6 +485,11 @@ class Equipment(object):
             self.equip()
 
     def equip(self):
+        # Unequip previous item in slot
+        old_equipment = get_equipped_in_slot(self.slot)
+        if old_equipment is not None:
+            old_equipment.dequip()
+
         self.is_equipped = True
         message('Equipped ' + self.owner.name + ' on ' + self.slot + '.', libtcod.light_green)
 
@@ -484,6 +498,13 @@ class Equipment(object):
             return
         self.is_equipped = False
         message('Dequipped ' + self.owner.name + ' on ' + self.slot + '.', libtcod.light_yellow)
+
+
+def get_equipped_in_slot(slot):
+    for obj in inventory:
+        if obj.equipment and obj.equipment.slot == slot and obj.equipment.is_equipped:
+            return obj.equipment
+    return None
 
 
 def player_move_or_attack(dx, dy):
@@ -552,7 +573,12 @@ def inventory_menu(header):
     if len(inventory) == 0:
         options = ['Inventory is empty.']
     else:
-        options = [item.name for item in inventory]
+        options = []
+        for item in inventory:
+            text = item.name
+            if item.equipment and item.equipment.is_equipped:
+                text = text + ' (on ' + item.equipment.slot + ')'
+            options.append(text)
 
     index = menu(header, options, INVENTORY_WIDTH)
     if index is None or len(inventory) == 0:
