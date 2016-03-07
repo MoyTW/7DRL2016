@@ -586,7 +586,7 @@ def cast_lightning():
     monster = closest_monster(LIGHTNING_RANGE)
 
     if monster is None:
-        message('No valid targets for Lignting spell!', libtcod.red)
+        message('No valid targets for Lightning spell!', libtcod.red)
         return 'cancelled'  # TODO: fix this
 
     message('Lightning used on ' + monster.name + ' for ' + str(LIGHTNING_DAMAGE) + ' damage!', libtcod.light_yellow)
