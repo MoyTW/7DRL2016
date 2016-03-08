@@ -261,10 +261,15 @@ class Object(object):
             self.item.owner = self
 
     def move(self, dx, dy):
+        new_x = self.x + dx
+        new_y = self.y + dy
+        blocked = is_blocked(game_map, new_x, new_y)  # TODO: Scoping!
         # SCOPING DEAR OH GOD WHY FIX THIS AFTER THE TUTORIAL
-        if not is_blocked(game_map, self.x + dx, self.y + dy):  # TODO: Scoping!
+        if not blocked:
             self.x += dx
             self.y += dy
+        return blocked, new_x, new_y  # TODO: Kind of messy!
+
 
     # TODO: Pull AI logic out of base Object class!
     # TODO: Take other instead of x/y!
@@ -275,7 +280,7 @@ class Object(object):
 
         dx = int(round(dx / distance))
         dy = int(round(dy / distance))
-        self.move(dx, dy)
+        return self.move(dx, dy)
 
     def distance_to(self, other):
         dx = other.x - self.x
@@ -367,6 +372,23 @@ class TosserMonster(object):
         monster = self.owner
         if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
             cast_throw_rock(caster=monster, target=player)
+
+
+class ProjectileAI(object):
+    def __init__(self, target_x, target_y, _objects):
+        self.target_x = target_x
+        self.target_y = target_y
+        self.objects = _objects
+
+    def take_turn(self):
+        monster = self.owner
+        (blocked, next_x, next_y) = monster.move_towards(self.target_x, self.target_y)
+        if blocked or (next_x == self.target_x and next_y == self.target_y):
+            for obj in objects:  # TODO: Ugh this is gnarly
+                if obj.x == next_x and obj.y == next_y and obj.fighter and obj != monster:
+                    monster.fighter.attack(obj)
+                    break
+            monster.fighter.death_function(monster)
 
 
 class ConfusedMonster(object):
@@ -660,6 +682,10 @@ def monster_death(monster):
     monster.send_to_back()
 
 
+def projectile_death(projectile):
+    objects.remove(projectile)
+
+
 def target_tile(max_range=None):
     """Blocks until keypress or click. If the key is ESCAPE or right-click, exits; otherwise waits for a left-click on
     an in-FOV, in-range tile and returns (x, y) of the tile."""
@@ -755,8 +781,11 @@ def cast_confuse():
 
 
 def cast_throw_rock(caster, target):
-    message('The ' + caster.name + ' attacks ' + target.name + ' by throwing a rock!', libtcod.grey)
-    caster.fighter.attack(target)
+    fighter_component = Fighter(hp=1, defense=0, power=0, xp=0, death_function=projectile_death)
+    ai_component = ProjectileAI(target.x, target.y, objects)
+    projectile = Object(caster.x, caster.y, '*', 'rock', libtcod.grey, blocks=False, fighter=fighter_component,
+                        ai=ai_component)
+    objects.append(projectile)
 
 
 def save_game():
