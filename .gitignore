@@ -39,3 +39,6 @@ target/
 
 # Save game file
 save_game
+
+# PyCharm stuff
+.idea/*
