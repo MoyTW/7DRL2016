@@ -4,6 +4,7 @@ import textwrap
 import shelve
 from constants import *  # TODO: Bad programmer!
 import render
+from utils import LinePath
 
 
 class Tile(object):
@@ -268,7 +269,7 @@ class Object(object):
         if not blocked:
             self.x += dx
             self.y += dy
-        return blocked, new_x, new_y  # TODO: Kind of messy!
+        return blocked
 
 
     # TODO: Pull AI logic out of base Object class!
@@ -375,16 +376,18 @@ class TosserMonster(object):
 
 
 class ProjectileAI(object):
-    def __init__(self, target_x, target_y, _objects):
-        self.target_x = target_x
-        self.target_y = target_y
+    def __init__(self, x, y, target_x, target_y, _objects):
+        self.path = LinePath(x, y, target_x, target_y)
         self.objects = _objects
 
     def take_turn(self):
         monster = self.owner
-        (blocked, next_x, next_y) = monster.move_towards(self.target_x, self.target_y)
-        if blocked or (next_x == self.target_x and next_y == self.target_y):
-            for obj in objects:  # TODO: Ugh this is gnarly
+
+        (next_x, next_y) = self.path.step()
+        blocked = monster.move_towards(next_x, next_y)
+
+        if blocked:
+            for obj in objects:  # TODO: Ugh this is still gnarly
                 if obj.x == next_x and obj.y == next_y and obj.fighter and obj != monster:
                     monster.fighter.attack(obj)
                     break
@@ -782,7 +785,7 @@ def cast_confuse():
 
 def cast_throw_rock(caster, target):
     fighter_component = Fighter(hp=1, defense=0, power=0, xp=0, death_function=projectile_death)
-    ai_component = ProjectileAI(target.x, target.y, objects)
+    ai_component = ProjectileAI(caster.x, caster.y, target.x, target.y, objects)
     projectile = Object(caster.x, caster.y, '*', 'rock', libtcod.grey, blocks=False, fighter=fighter_component,
                         ai=ai_component)
     objects.append(projectile)
