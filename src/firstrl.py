@@ -369,10 +369,18 @@ class BasicMonster(object):
 
 
 class TosserMonster(object):
+    def __init__(self, cooldown=2):
+        self.cooldown = cooldown
+        self.current_cooldown = 0
+
     def take_turn(self):
         monster = self.owner
-        if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
+        if libtcod.map_is_in_fov(fov_map, monster.x, monster.y) and self.current_cooldown == 0:
             cast_throw_rock(caster=monster, target=player)
+            self.current_cooldown += self.cooldown
+        else:
+            # monster.move_towards(player.x, player.y)
+            self.current_cooldown -= 1
 
 
 class ProjectileAI(object):
