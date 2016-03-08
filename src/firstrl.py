@@ -61,8 +61,8 @@ def create_v_tunnel(gm, y1, y2, x):
 
 def place_objects(gm, room):
     max_monsters = from_dungeon_level([[2, 1], [3, 4], [5, 6]])
-    monster_chances = {'orc': 80,
-                       'troll': from_dungeon_level([[15, 3], [30, 5], [60, 7]])}  # TODO: Enum?
+    monster_chances = {'orc': 1,
+                       'troll': from_dungeon_level([[9999, 1], [30, 5], [60, 7]])}  # TODO: Enum?
 
     max_items = from_dungeon_level([[2, 1], [3, 4]])
     item_chances = {'heal': 35,
@@ -88,7 +88,7 @@ def place_objects(gm, room):
                                  ai=ai_component)
             elif choice == 'troll':
                 fighter_component = Fighter(hp=10, defense=0, power=3, xp=100, death_function=monster_death)
-                ai_component = BasicMonster()
+                ai_component = TosserMonster()
 
                 monster = Object(x, y, 'T', 'troll', libtcod.darker_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
@@ -360,6 +360,13 @@ class BasicMonster(object):
                 monster.move_towards(player.x, player.y)
             elif player.fighter.hp > 0:
                 monster.fighter.attack(player)
+
+
+class TosserMonster(object):
+    def take_turn(self):
+        monster = self.owner
+        if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
+            cast_throw_rock(caster=monster, target=player)
 
 
 class ConfusedMonster(object):
@@ -745,6 +752,11 @@ def cast_confuse():
     monster.ai = ConfusedMonster(old_ai)
     monster.ai.owner = monster
     message('Confused ' + monster.name + '!', libtcod.light_blue)
+
+
+def cast_throw_rock(caster, target):
+    message('The ' + caster.name + ' attacks ' + target.name + ' by throwing a rock!', libtcod.grey)
+    caster.fighter.attack(target)
 
 
 def save_game():
