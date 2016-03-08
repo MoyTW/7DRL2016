@@ -74,8 +74,8 @@ class Rect(object):
         return self.x1 <= other.x2 and self.x2 >= other.x1 and self.y1 <= other.y2 and self.y2 >= other.y1
 
 
-def is_blocked(x, y):
-    if game_map[x][y].blocked:
+def is_blocked(gm, x, y):
+    if gm[x][y].blocked:
         return True
     for o in objects:
         if o.blocks and o.x == x and o.y == y:
@@ -83,32 +83,26 @@ def is_blocked(x, y):
     return False
 
 
-def create_room(room):
-    # TODO: Fix this scoping issue
-    global game_map
+def create_room(gm, room):
     for x in range(room.x1 + 1, room.x2):
         for y in range(room.y1 + 1, room.y2):
-            game_map[x][y].blocked = False
-            game_map[x][y].block_sight = False
+            gm[x][y].blocked = False
+            gm[x][y].block_sight = False
 
 
-def create_h_tunnel(x1, x2, y):
-    # TODO: Scoping
-    global game_map
+def create_h_tunnel(gm, x1, x2, y):
     for x in range(min(x1, x2), max(x1, x2) + 1):
-        game_map[x][y].blocked = False
-        game_map[x][y].block_sight = False
+        gm[x][y].blocked = False
+        gm[x][y].block_sight = False
 
 
-def create_v_tunnel(y1, y2, x):
-    # TODO: lol scope
-    global game_map
+def create_v_tunnel(gm, y1, y2, x):
     for y in range(min(y1, y2), max(y1, y2) + 1):
-        game_map[x][y].blocked = False
-        game_map[x][y].block_sight = False
+        gm[x][y].blocked = False
+        gm[x][y].block_sight = False
 
 
-def place_objects(room):
+def place_objects(gm, room):
     max_monsters = from_dungeon_level([[2, 1], [3, 4], [5, 6]])
     monster_chances = {'orc': 80,
                        'troll': from_dungeon_level([[15, 3], [30, 5], [60, 7]])}  # TODO: Enum?
@@ -126,7 +120,7 @@ def place_objects(room):
         x = libtcod.random_get_int(0, room.x1 + 1, room.x2 - 1)
         y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
 
-        if not is_blocked(x, y):
+        if not is_blocked(gm, x, y):
             choice = random_choice(monster_chances)
 
             if choice == 'orc':
@@ -150,7 +144,7 @@ def place_objects(room):
         x = libtcod.random_get_int(0, room.x1 + 1, room.x2 - 1)
         y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
 
-        if not is_blocked(x, y):
+        if not is_blocked(gm, x, y):
             choice = random_choice(item_chances)
 
             if choice == 'heal':
@@ -208,13 +202,13 @@ def get_names_under_mouse():
 
 def make_game_map():
     # OH GOD! WHAT IS SCOPE EVEN
-    global game_map, objects, stairs
+    global objects, stairs
 
     objects = [player]
 
-    game_map = [[Tile(True)
-                 for _ in range(MAP_HEIGHT)]
-                for _ in range(MAP_WIDTH)]
+    gm = [[Tile(True)
+           for _ in range(MAP_HEIGHT)]
+          for _ in range(MAP_WIDTH)]
 
     rooms = []
     # You could just use the count of rooms here, couldn't you?
@@ -237,10 +231,10 @@ def make_game_map():
                 break
 
         if not failed:
-            create_room(new_room)
+            create_room(gm, new_room)
             (new_x, new_y) = new_room.center()
 
-            place_objects(new_room)
+            place_objects(gm, new_room)
 
             if num_rooms == 0:
                 player.x = new_x
@@ -250,11 +244,11 @@ def make_game_map():
                 (prev_x, prev_y) = rooms[num_rooms - 1].center()
 
                 if libtcod.random_get_int(0, 0, 1):
-                    create_h_tunnel(prev_x, new_x, prev_y)
-                    create_v_tunnel(prev_y, new_y, new_x)
+                    create_h_tunnel(gm, prev_x, new_x, prev_y)
+                    create_v_tunnel(gm, prev_y, new_y, new_x)
                 else:
-                    create_v_tunnel(prev_y, new_y, new_x)
-                    create_h_tunnel(prev_x, new_x, prev_y)
+                    create_v_tunnel(gm, prev_y, new_y, new_x)
+                    create_h_tunnel(gm, prev_x, new_x, prev_y)
 
             rooms.append(new_room)
             num_rooms += 1
@@ -263,6 +257,8 @@ def make_game_map():
     stairs = Object(new_x, new_y, '<', 'stairs', libtcod.white, always_visible=True,)
     objects.append(stairs)
     stairs.send_to_back()
+
+    return gm
 
 
 def random_choice_index(chances):
@@ -337,7 +333,7 @@ class Object(object):
 
     def move(self, dx, dy):
         # SCOPING DEAR OH GOD WHY FIX THIS AFTER THE TUTORIAL
-        if not is_blocked(self.x + dx, self.y + dy):
+        if not is_blocked(game_map, self.x + dx, self.y + dy):  # TODO: Scoping!
             self.x += dx
             self.y += dy
 
@@ -923,7 +919,7 @@ def clear_objects():
 
 # =================================================== MAIN LOOP ==================================================
 def new_game():
-    global player, inventory, game_msgs, game_state, dungeon_level
+    global player, inventory, game_msgs, game_state, dungeon_level, game_map
 
     player_fighter = Fighter(hp=30, defense=2, power=2, xp=0, death_function=player_death)  # TODO: Don't overload xp!
     player = Object(0, 0, '@', 'player', libtcod.white, blocks=True, fighter=player_fighter)
@@ -932,7 +928,7 @@ def new_game():
     player.level = 1
 
     dungeon_level = 1
-    make_game_map()
+    game_map = make_game_map()
     initialize_fov()
 
     game_state = 'playing'  # TODO: Enum?
@@ -950,14 +946,14 @@ def new_game():
 
 
 def next_level():
-    global dungeon_level
+    global dungeon_level, game_map
 
     message('Healing before going down to the next level.', libtcod.light_violet)
     player.fighter.heal(player.fighter.max_hp / 2)
 
     dungeon_level += 1
     message('Going down! Entering level ' + str(dungeon_level), libtcod.white)
-    make_game_map()
+    game_map = make_game_map()
     initialize_fov()
 
 
