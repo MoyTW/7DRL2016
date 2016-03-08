@@ -3,11 +3,7 @@ import math
 import textwrap
 import shelve
 from constants import *  # TODO: Bad programmer!
-
-color_dark_wall = libtcod.Color(0, 0, 100)
-color_light_wall = libtcod.Color(130, 110, 50)
-color_dark_ground = libtcod.Color(50, 50, 100)
-color_light_ground = libtcod.Color(200, 180, 50)
+import render
 
 
 class Tile(object):
@@ -131,34 +127,6 @@ def place_objects(gm, room):
 
             objects.append(item)
             item.send_to_back()
-
-
-def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
-    bar_width = int(float(value) / maximum * total_width)
-
-    # render background
-    libtcod.console_set_default_background(panel, back_color)
-    libtcod.console_rect(panel, x, y, total_width, 1, False, libtcod.BKGND_SCREEN)
-
-    # render bar
-    libtcod.console_set_default_background(panel, bar_color)
-    if bar_width > 0:
-        libtcod.console_rect(panel, x, y, bar_width, 1, False, libtcod.BKGND_SCREEN)
-
-    # text
-    libtcod.console_set_default_foreground(panel, libtcod.white)
-    libtcod.console_print_ex(panel, x + total_width / 2, y, libtcod.BKGND_NONE, libtcod.CENTER,
-                             name + ': ' + str(value) + '/' + str(maximum))
-
-
-def get_names_under_mouse():
-    global mouse
-
-    (x, y) = (mouse.cx, mouse.cy)
-    names = [obj.name for obj in objects
-             if obj.x == x and obj.y == y and libtcod.map_is_in_fov(fov_map, obj.x, obj.y)]
-    names_str = ', '.join(names)
-    return names_str.capitalize()
 
 
 def make_game_map():
@@ -692,7 +660,9 @@ def target_tile(max_range=None):
     while True:
         libtcod.console_flush()
         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
-        render_all()
+        render.render_all(fov_recompute=fov_recompute, player=player, objects=objects, fov_map=fov_map,
+                          game_map=game_map, con=con, panel=panel, game_msgs=game_msgs, dungeon_level=dungeon_level,
+                          mouse=mouse)
 
         (x, y) = (mouse.cx, mouse.cy)
 
@@ -807,62 +777,6 @@ def load_game():
     initialize_fov()
 
 
-def render_all():
-    # TODO: scope
-    global fov_recompute
-
-    for o in objects:
-        if o != player:
-            o.draw()
-    player.draw()
-
-    if fov_recompute:
-        fov_recompute = False
-        libtcod.map_compute_fov(fov_map, player.x, player.y, TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
-
-    # Underscore because shadowing
-    for y in range(MAP_HEIGHT):
-        for x in range(MAP_WIDTH):
-            visible = libtcod.map_is_in_fov(fov_map, x, y)
-            wall = game_map[x][y].block_sight
-            if not visible:
-                if game_map[x][y].explored:
-                    if wall:
-                        libtcod.console_set_char_background(con, x, y, color_dark_wall, libtcod.BKGND_SET)
-                    else:
-                        libtcod.console_set_char_background(con, x, y, color_dark_ground, libtcod.BKGND_SET)
-            else:
-                if wall:
-                    libtcod.console_set_char_background(con, x, y, color_light_wall, libtcod.BKGND_SET)
-                else:
-                    libtcod.console_set_char_background(con, x, y, color_light_ground, libtcod.BKGND_SET)
-                game_map[x][y].explored = True
-
-    libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
-
-    # ----- rendering GUI -----
-    libtcod.console_set_default_background(panel, libtcod.black)
-    libtcod.console_clear(panel)
-
-    # print messages
-    y = 1
-    for (line, color) in game_msgs:
-        libtcod.console_set_default_foreground(panel, color)
-        libtcod.console_print_ex(panel, MSG_X, y, libtcod.BKGND_NONE, libtcod.LEFT, line)
-        y += 1
-
-    # print bars
-    render_bar(1, 1, BAR_WIDTH, 'HP', player.fighter.hp, player.fighter.max_hp, libtcod.light_red, libtcod.darker_red)
-    libtcod.console_print_ex(panel, 1, 3, libtcod.BKGND_NONE, libtcod.LEFT, 'Dungeon level: ' + str(dungeon_level))
-
-    # print mouselook
-    libtcod.console_set_default_foreground(panel, libtcod.light_grey)
-    libtcod.console_print_ex(panel, 1, 0, libtcod.BKGND_NONE, libtcod.LEFT, get_names_under_mouse())
-
-    # blit GUI
-    libtcod.console_blit(panel, 0, 0, SCREEN_WIDTH, PANEL_HEIGHT, 0, 0, PANEL_Y)
-
-
 def message(new_msg, color=libtcod.white):
     new_msg_lines = textwrap.wrap(new_msg, MSG_WIDTH)
 
@@ -939,7 +853,9 @@ def play_game():
         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
         libtcod.console_set_default_foreground(0, libtcod.white)
 
-        render_all()
+        render.render_all(fov_recompute=fov_recompute, player=player, objects=objects, fov_map=fov_map,
+                          game_map=game_map, con=con, panel=panel, game_msgs=game_msgs, dungeon_level=dungeon_level,
+                          mouse=mouse)
         libtcod.console_flush()
 
         check_level_up()
