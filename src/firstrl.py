@@ -73,7 +73,7 @@ def place_objects(gm, room):
                     'sword': 25,
                     'shield': 25}  # TODO: Enum?
 
-    num_monsters = libtcod.random_get_int(0, 0, max_monsters)
+    num_monsters = 1  # libtcod.random_get_int(0, 0, max_monsters)
     for _ in range(num_monsters):
         x = libtcod.random_get_int(0, room.x1 + 1, room.x2 - 1)
         y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
