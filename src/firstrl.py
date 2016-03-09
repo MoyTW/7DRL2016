@@ -61,15 +61,15 @@ def create_v_tunnel(gm, y1, y2, x):
 
 
 def place_objects(gm, room):
-    max_monsters = from_dungeon_level([[2, 1], [3, 4], [5, 6]])
+    max_monsters = from_dungeon_level(dungeon_level, [[2, 1], [3, 4], [5, 6]])
     monster_chances = {'orc': 1,
-                       'troll': from_dungeon_level([[9999, 1], [30, 5], [60, 7]])}  # TODO: Enum?
+                       'troll': from_dungeon_level(dungeon_level, [[9999, 1], [30, 5], [60, 7]])}  # TODO: Enum?
 
-    max_items = from_dungeon_level([[2, 1], [3, 4]])
+    max_items = from_dungeon_level(dungeon_level, [[2, 1], [3, 4]])
     item_chances = {'heal': 35,
-                    'lightning': from_dungeon_level([[15, 1], [30, 3], [45, 5]]),
-                    'fireball': from_dungeon_level([[5, 2], [25, 5]]),
-                    'confuse': from_dungeon_level([[5, 3], [25, 6]]),
+                    'lightning': from_dungeon_level(dungeon_level, [[15, 1], [30, 3], [45, 5]]),
+                    'fireball': from_dungeon_level(dungeon_level, [[5, 2], [25, 5]]),
+                    'confuse': from_dungeon_level(dungeon_level, [[5, 3], [25, 6]]),
                     'sword': 25,
                     'shield': 25}  # TODO: Enum?
 
@@ -216,13 +216,14 @@ def random_choice(chances_dict):
 
 
 # TODO: Pass the dang thing in
-def from_dungeon_level(table):
+def from_dungeon_level(_dungeon_level, table):
     """Given a table, return the value for the current dungeon level.
+    :param _dungeon_level: The dungeon level to draw from the table for
     :param table: The table, formatted as a list of [value, level] pairs.
     :return: The value for the current dungeon level
     """
     for (value, level) in reversed(table):
-        if dungeon_level >= level:
+        if _dungeon_level >= level:
             return value
     return 0
 
