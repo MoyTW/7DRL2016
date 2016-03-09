@@ -62,3 +62,23 @@ class LinePath(Path):
             self.x += self.x_diff
             self.error += self.d_error
             return self.x, self.y
+
+
+class ReversePath(Path):
+    def __init__(self, x0, y0, x1, y1):
+        super(ReversePath, self).__init__(x0, y0)
+        self.straight_segment = LinePath(x0, y0, x1, y1)
+        self.x1 = x1
+        self.y1 = y1
+        self.reverse_segment = LinePath(x1, y1, x0, y0)
+        self.has_reversed = False
+
+    def step(self):
+        if not self.has_reversed:
+            (self.x, self.y) = self.straight_segment.step()
+            if self.x == self.x1 and self.y == self.y1:
+                self.has_reversed = True
+            return self.x, self.y
+        else:
+            (self.x, self.y) = self.reverse_segment.step()
+            return self.x, self.y

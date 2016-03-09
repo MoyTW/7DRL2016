@@ -4,7 +4,7 @@ import textwrap
 import shelve
 from constants import *  # TODO: Bad programmer!
 import render
-from utils import LinePath
+from utils import LinePath, ReversePath
 
 
 class Tile(object):
@@ -386,7 +386,7 @@ class TosserMonster(object):
 
 class ProjectileAI(object):
     def __init__(self, x, y, target_x, target_y, _objects):
-        self.path = LinePath(x, y, target_x, target_y)
+        self.path = ReversePath(x, y, target_x, target_y)
         self.objects = _objects
 
     def take_turn(self):
