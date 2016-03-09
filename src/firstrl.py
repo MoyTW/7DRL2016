@@ -565,6 +565,7 @@ def menu(header, options, width):
 
     # hold window
     libtcod.console_flush()
+    libtcod.console_wait_for_keypress(True)  # Necessary to flush input buffer; otherwise will instantly return
     k = libtcod.console_wait_for_keypress(True)
 
     # return selection
