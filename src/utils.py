@@ -1,11 +1,31 @@
 import math
+import copy
 
 
-class LinePath(object):
-    """ Defines a line from (x0, y0) to (x1, y1). Progresses along a line from 0 to 1 using the step function. """
+class Path(object):
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def current_position(self):
+        return self.x, self.y
+
+    def step(self):
+        raise NotImplementedError('Override this!')
+
+    def project(self, turns):
+        mirror_path = copy.deepcopy(self)  # TODO: Kinda nasty, but DEADLINES!
+        visited = []
+        for _ in range(turns):
+            mirror_path.step()
+            visited.append((mirror_path.x, mirror_path.y))
+        return visited
+
+
+class LinePath(Path):
+    """ Defines a line from (x0, y0) to (x1, y1). Will continue past (x1, y1). """
     def __init__(self, x0, y0, x1, y1):
-        self.x0 = x0
-        self.y0 = y0
+        super(LinePath, self).__init__(x0, y0)
         self.x1 = x1
         self.y1 = y1
 
@@ -15,9 +35,6 @@ class LinePath(object):
         else:
             self.vertical = False
             self.d_error = math.fabs(float(y1 - y0) / float(x1 - x0))
-
-        self.x = x0
-        self.y = y0
 
         self.error = 0.0
 
@@ -32,9 +49,6 @@ class LinePath(object):
         else:
             x_diff = -1
         self.x_diff = x_diff
-
-    def current_position(self):
-        return self.x, self.y
 
     def step(self):
         if self.vertical:
