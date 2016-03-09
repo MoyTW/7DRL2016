@@ -7,12 +7,43 @@ color_dark_ground = libtcod.Color(50, 50, 100)
 color_light_ground = libtcod.Color(200, 180, 50)
 
 
-def get_names_under_mouse(fov_map, mouse, objects):
-    (x, y) = (mouse.cx, mouse.cy)
+def get_names_under_mouse(fov_map, camera_x, camera_y, mouse, objects):
+    (x, y) = (camera_x + mouse.cx, camera_y + mouse.cy)
+
     names = [obj.name for obj in objects
              if obj.x == x and obj.y == y and libtcod.map_is_in_fov(fov_map, obj.x, obj.y)]
     names_str = ', '.join(names)
     return names_str.capitalize()
+
+
+def move_camera(target_x, target_y, camera_x, camera_y):
+    # new camera coordinates (top-left corner of the screen relative to the map)
+    x = target_x - CAMERA_WIDTH / 2
+    y = target_y - CAMERA_HEIGHT / 2
+
+    # make sure the camera doesn't see outside the map
+    if x < 0:
+        x = 0
+    if y < 0:
+        y = 0
+    if x > MAP_WIDTH - CAMERA_WIDTH - 1:
+        x = MAP_WIDTH - CAMERA_WIDTH - 1
+    if y > MAP_HEIGHT - CAMERA_HEIGHT - 1:
+        y = MAP_HEIGHT - CAMERA_HEIGHT - 1
+
+    recompute = (x != camera_x or y != camera_y)
+
+    return x, y, recompute
+
+
+def to_camera_coordinates(x, y, camera_x, camera_y):
+    # convert coordinates on the map to coordinates on the screen
+    (x, y) = (x - camera_x, y - camera_y)
+
+    if x < 0 or y < 0 or x >= CAMERA_WIDTH or y >= CAMERA_HEIGHT:
+        return None, None  # if it's outside the view, return nothing
+    else:
+        return x, y
 
 
 def render_bar(panel, x, y, total_width, name, value, maximum, bar_color, back_color):
@@ -34,7 +65,11 @@ def render_bar(panel, x, y, total_width, name, value, maximum, bar_color, back_c
 
 
 def render_all(fov_recompute, player, objects, fov_map, game_map, con, panel, game_msgs, dungeon_level,
-               mouse):  # TODO: Silly
+               mouse, camera_x, camera_y):  # TODO: Silly
+
+    (camera_x, camera_y, recompute) = move_camera(player.x, player.y, camera_x, camera_y)
+    fov_recompute = fov_recompute or recompute
+
     for o in objects:
         if o != player:
             o.draw()
@@ -43,14 +78,16 @@ def render_all(fov_recompute, player, objects, fov_map, game_map, con, panel, ga
     if fov_recompute:
         fov_recompute = False
         libtcod.map_compute_fov(fov_map, player.x, player.y, TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
+        libtcod.console_clear(con)
 
     # Underscore because shadowing
-    for y in range(MAP_HEIGHT):
-        for x in range(MAP_WIDTH):
-            visible = libtcod.map_is_in_fov(fov_map, x, y)
-            wall = game_map[x][y].block_sight
+    for y in range(CAMERA_HEIGHT):
+        for x in range(CAMERA_WIDTH):
+            (map_x, map_y) = (camera_x + x, camera_y + y)
+            visible = libtcod.map_is_in_fov(fov_map, map_x, map_y)
+            wall = game_map[map_x][map_y].block_sight
             if not visible:
-                if game_map[x][y].explored:
+                if game_map[map_x][map_y].explored:
                     if wall:
                         libtcod.console_set_char_background(con, x, y, color_dark_wall, libtcod.BKGND_SET)
                     else:
@@ -60,7 +97,7 @@ def render_all(fov_recompute, player, objects, fov_map, game_map, con, panel, ga
                     libtcod.console_set_char_background(con, x, y, color_light_wall, libtcod.BKGND_SET)
                 else:
                     libtcod.console_set_char_background(con, x, y, color_light_ground, libtcod.BKGND_SET)
-                game_map[x][y].explored = True
+                game_map[map_x][map_y].explored = True
 
     libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
 
@@ -83,9 +120,10 @@ def render_all(fov_recompute, player, objects, fov_map, game_map, con, panel, ga
     # print mouselook
     libtcod.console_set_default_foreground(panel, libtcod.light_grey)
     libtcod.console_print_ex(panel, 1, 0, libtcod.BKGND_NONE, libtcod.LEFT,
-                             get_names_under_mouse(fov_map=fov_map, mouse=mouse, objects=objects))
+                             get_names_under_mouse(fov_map=fov_map, camera_x=camera_x, camera_y=camera_y, mouse=mouse,
+                                                   objects=objects))
 
     # blit GUI
     libtcod.console_blit(panel, 0, 0, SCREEN_WIDTH, PANEL_HEIGHT, 0, 0, PANEL_Y)
 
-    return fov_recompute
+    return camera_x, camera_y, fov_recompute

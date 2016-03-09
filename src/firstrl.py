@@ -296,12 +296,16 @@ class Object(object):
     def draw(self):
         if libtcod.map_is_in_fov(fov_map, self.x, self.y) or \
                 (self.always_visible and game_map[self.x][self.y].explored):
-            libtcod.console_set_default_foreground(con, self.color)
-            libtcod.console_put_char(con, self.x, self.y, self.char, libtcod.BKGND_NONE)
+            (x, y) = render.to_camera_coordinates(self.x, self.y, camera_x, camera_y)
+
+            if x is not None:
+                libtcod.console_set_default_foreground(con, self.color)
+                libtcod.console_put_char(con, x, y, self.char, libtcod.BKGND_NONE)
 
     # TODO: Have clear take the buffer to draw to as a parameter!
     def clear(self):
-        libtcod.console_put_char(con, self.x, self.y, ' ', libtcod.BKGND_NONE)
+        (x, y) = render.to_camera_coordinates(self.x, self.y, camera_x, camera_y)
+        libtcod.console_put_char(con, x, y, ' ', libtcod.BKGND_NONE)
 
     def send_to_back(self):
         global objects
@@ -703,15 +707,18 @@ def projectile_death(projectile):
 def target_tile(max_range=None):
     """Blocks until keypress or click. If the key is ESCAPE or right-click, exits; otherwise waits for a left-click on
     an in-FOV, in-range tile and returns (x, y) of the tile."""
-    global key, mouse  # TODO: Scoping
+    global key, mouse, camera_x, camera_y, fov_recompute  # TODO: Scoping
     while True:
         libtcod.console_flush()
         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
-        render.render_all(fov_recompute=fov_recompute, player=player, objects=objects, fov_map=fov_map,
-                          game_map=game_map, con=con, panel=panel, game_msgs=game_msgs, dungeon_level=dungeon_level,
-                          mouse=mouse)
 
-        (x, y) = (mouse.cx, mouse.cy)
+        (camera_x, camera_y, fov_recompute) = render.render_all(fov_recompute=fov_recompute, player=player,
+                                                                objects=objects, fov_map=fov_map, game_map=game_map,
+                                                                con=con, panel=panel, game_msgs=game_msgs,
+                                                                dungeon_level=dungeon_level, mouse=mouse,
+                                                                camera_x=camera_x, camera_y=camera_y)
+
+        (x, y) = (camera_x + mouse.cx, camera_y + mouse.cy)
 
         if mouse.rbutton_pressed or key.vk == libtcod.KEY_ESCAPE:
             return None, None
@@ -900,17 +907,21 @@ def initialize_fov():
 
 
 def play_game():
-    global key, mouse
+    global camera_x, camera_y, key, mouse, fov_recompute
 
     mouse = libtcod.Mouse()
     key = libtcod.Key()
+    (camera_x, camera_y) = (0, 0)
+
     while not libtcod.console_is_window_closed():
         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
         libtcod.console_set_default_foreground(0, libtcod.white)
 
-        render.render_all(fov_recompute=fov_recompute, player=player, objects=objects, fov_map=fov_map,
-                          game_map=game_map, con=con, panel=panel, game_msgs=game_msgs, dungeon_level=dungeon_level,
-                          mouse=mouse)
+        (camera_x, camera_y, fov_recompute) = render.render_all(fov_recompute=fov_recompute, player=player,
+                                                                objects=objects, fov_map=fov_map, game_map=game_map,
+                                                                con=con, panel=panel, game_msgs=game_msgs,
+                                                                dungeon_level=dungeon_level, mouse=mouse,
+                                                                camera_x=camera_x, camera_y=camera_y)
         libtcod.console_flush()
 
         check_level_up()
