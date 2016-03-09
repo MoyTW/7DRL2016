@@ -120,10 +120,10 @@ def place_objects(gm, room):
                 item = Object(x, y, '#', 'scroll of confuse', libtcod.light_blue, always_visible=True,
                               item=item_component)
             elif choice == 'sword':
-                equipment_component = Equipment(slot='right hand', power_bonus=3)  # TODO: Slot as string
+                equipment_component = Equipment(slot=SLOT_RIGHT_HAND, power_bonus=3)
                 item = Object(x, y, '/', 'sword', libtcod.sky, equipment=equipment_component)
             elif choice == 'shield':
-                equipment_component = Equipment(slot='left hand', defense_bonus=1)  # TODO: Slot as string
+                equipment_component = Equipment(slot=SLOT_LEFT_HAND, defense_bonus=1)
                 item = Object(x, y, '[', 'shield', libtcod.sky, equipment=equipment_component)
 
             objects.append(item)
@@ -449,7 +449,7 @@ class Item(object):
         if self.use_function is None:
             message('The ' + self.owner.name + ' cannot be used!')
         else:
-            if self.use_function() != 'cancelled':  # TODO: please stop using strings for this!
+            if self.use_function() != ACTION_CANCELLED:
                 inventory.remove(self.owner)
 
     def drop(self):
@@ -606,7 +606,7 @@ def handle_keys():
     elif key.vk == libtcod.KEY_ESCAPE:
         return 'exit'
 
-    if game_state == 'playing':
+    if game_state == GAME_STATE_PLAYING:
         # movement keys
         if key.vk == libtcod.KEY_UP or key.vk == libtcod.KEY_KP8:
             player_move_or_attack(0, -1)
@@ -655,7 +655,7 @@ def handle_keys():
                        str(player.fighter.defense),
                        CHARACTER_SCREEN_WIDTH)
 
-            return 'didnt-take-turn'  # TODO: Enum
+            return GAME_STATE_DIDNT_TAKE_TURN
 
 
 def check_level_up():
@@ -684,7 +684,7 @@ def check_level_up():
 def player_death(_):
     global game_state
     message('You died!', libtcod.red)
-    game_state = 'dead'  # TODO: Enum
+    game_state = GAME_STATE_PLAYER_DEAD
 
     player.char = '%'
     player.color = libtcod.dark_red
@@ -769,7 +769,7 @@ def cast_lightning():
 
     if monster is None:
         message('No valid targets for Lightning spell!', libtcod.red)
-        return 'cancelled'  # TODO: fix this
+        return ACTION_CANCELLED
 
     message('Lightning used on ' + monster.name + ' for ' + str(LIGHTNING_DAMAGE) + ' damage!', libtcod.light_yellow)
     monster.fighter.take_damage(LIGHTNING_DAMAGE)
@@ -780,7 +780,7 @@ def cast_fireball():
     (x, y) = target_tile()
     if x is None:
         message('Fireball targeting cancelled.', libtcod.orange)
-        return 'cancelled'  # TODO: Enum
+        return ACTION_CANCELLED
     message('Fireball at (' + str(x) + ',' + str(y) + ') with radius ' + str(FIREBALL_RADIUS) + '.')
 
     for obj in objects:
@@ -794,7 +794,7 @@ def cast_confuse():
     monster = target_monster(CONFUSE_RANGE)
     if monster is None:
         message('Confuse cancelled.', libtcod.light_blue)
-        return 'cancelled'  # TODO: enum
+        return ACTION_CANCELLED
 
     old_ai = monster.ai
     monster.ai = ConfusedMonster(old_ai)
@@ -869,7 +869,7 @@ def new_game():
     game_map = make_game_map()
     initialize_fov()
 
-    game_state = 'playing'  # TODO: Enum?
+    game_state = GAME_STATE_PLAYING
     inventory = []
 
     game_msgs = []
@@ -934,7 +934,7 @@ def play_game():
             save_game()
             break
 
-        if game_state == 'playing' and player_action != 'didnt-take-turn':
+        if game_state == GAME_STATE_PLAYING and player_action != GAME_STATE_DIDNT_TAKE_TURN:
             for o in objects:
                 if o.ai:
                     o.ai.take_turn()

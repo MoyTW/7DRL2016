@@ -1,3 +1,14 @@
+# Name constants
+GAME_STATE_DIDNT_TAKE_TURN = 'gs-didnt-take-turn'
+GAME_STATE_PLAYER_DEAD = 'gs-dead'
+GAME_STATE_PLAYING = 'gs-playing'
+
+ACTION_CANCELLED = 'cancelled'
+
+SLOT_RIGHT_HAND = 'right hand'
+SLOT_LEFT_HAND = 'left hand'
+
+# Value constants
 SCREEN_WIDTH = 80
 SCREEN_HEIGHT = 50
 LIMIT_FPS = 60
