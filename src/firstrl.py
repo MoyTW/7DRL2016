@@ -314,12 +314,14 @@ class Object(object):
 
 
 class Fighter(object):
-    def __init__(self, hp, defense, power, xp, death_function=None):
+    def __init__(self, hp, defense, power, xp, base_speed=100, death_function=None):
         self.base_max_hp = hp
         self.hp = hp
         self.base_defense = defense
         self.base_power = power
         self.xp = xp
+        self.base_speed = base_speed
+        self.time_until_turn = self.speed
         self.death_function = death_function
 
     @property
@@ -336,6 +338,14 @@ class Fighter(object):
     def power(self):
         bonus = sum(equipment.power_bonus for equipment in get_all_equipped(self.owner))
         return self.base_power + bonus
+
+    # TODO: Speed-altering equipment?
+    @property
+    def speed(self):
+        return self.base_speed
+
+    def end_turn(self):
+        self.time_until_turn = self.speed
 
     def attack(self, target):
         damage = self.power - target.fighter.defense
@@ -803,11 +813,12 @@ def cast_confuse():
 
 
 def cast_throw_rock(caster, target):
-    fighter_component = Fighter(hp=1, defense=0, power=0, xp=0, death_function=projectile_death)
+    fighter_component = Fighter(hp=1, defense=0, power=0, xp=0, base_speed=25, death_function=projectile_death)
     ai_component = ProjectileAI(caster.x, caster.y, target.x, target.y, objects)
     projectile = Object(caster.x, caster.y, '*', 'rock', libtcod.grey, blocks=False, fighter=fighter_component,
                         ai=ai_component)
     objects.append(projectile)
+    projectile.send_to_back()
 
 
 def save_game():
@@ -907,6 +918,15 @@ def initialize_fov():
     libtcod.console_clear(con)
 
 
+def time_to_next_event(_objects):
+    time = 9999
+    for obj in _objects:
+        if obj.fighter:
+            if obj.fighter.time_until_turn < time:
+                time = obj.fighter.time_until_turn
+    return time
+
+
 def play_game():
     global camera_x, camera_y, key, mouse, fov_recompute
 
@@ -929,15 +949,27 @@ def play_game():
 
         clear_objects()
 
-        player_action = handle_keys()
-        if player_action == 'exit':
-            save_game()
-            break
+        # TODO: Kind of messy way of structuring this!
+        time = time_to_next_event(objects)
+        for obj in objects:
+            if obj.fighter:
+                obj.fighter.time_until_turn -= time
+
+        if player.fighter.time_until_turn == 0:
+            player_action = handle_keys()
+            if player_action == 'exit':
+                save_game()
+                break
+            elif player_action != GAME_STATE_DIDNT_TAKE_TURN:
+                player.fighter.end_turn()
+        else:
+            player_action = None
 
         if game_state == GAME_STATE_PLAYING and player_action != GAME_STATE_DIDNT_TAKE_TURN:
             for o in objects:
-                if o.ai:
+                if o.fighter and o.fighter.time_until_turn == 0 and o.ai:
                     o.ai.take_turn()
+                    o.fighter.end_turn()
 
 
 def main_menu():
