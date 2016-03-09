@@ -88,7 +88,7 @@ def place_objects(gm, room):
                 monster = Object(x, y, 'o', 'orc', libtcod.desaturated_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
             elif choice == 'troll':
-                fighter_component = Fighter(hp=10, defense=0, power=3, xp=100, death_function=monster_death)
+                fighter_component = Fighter(hp=10, defense=4, power=3, xp=100, death_function=monster_death)
                 ai_component = TosserMonster()
 
                 monster = Object(x, y, 'T', 'troll', libtcod.darker_green, blocks=True, fighter=fighter_component,
@@ -392,17 +392,17 @@ class TosserMonster(object):
         monster = self.owner
 
         if libtcod.map_is_in_fov(fov_map, monster.x, monster.y) and self.current_cooldown == 0:
-            cast_throw_rock(caster=monster, target=player)
+            cast_throw_boomerang(caster=monster, target=player)
             self.current_cooldown += self.cooldown
         else:
-            # monster.move_towards(player.x, player.y)
+            cast_throw_rock(caster=monster, target=player)
             if self.current_cooldown > 0:
                 self.current_cooldown -= 1
 
 
 class ProjectileAI(object):
-    def __init__(self, x, y, target_x, target_y, _objects):
-        self.path = ReversePath(x, y, target_x, target_y)
+    def __init__(self, path, _objects):
+        self.path = path
         self.objects = _objects
 
     def take_turn(self):
@@ -439,7 +439,7 @@ class Item(object):
 
     def pick_up(self):
         if len(inventory) >= 26:
-            message('Your inventory is full! Cannot pick up ' + self.owner.name + '.', libtcod.red)
+            message('Your inventory is full! Cannot pick up ' + self.owner.name + '', libtcod.red)
         else:
             inventory.append(self.owner)
             objects.remove(self.owner)
@@ -812,10 +812,21 @@ def cast_confuse():
     message('Confused ' + monster.name + '!', libtcod.light_blue)
 
 
+def cast_throw_boomerang(caster, target):
+    fighter_component = Fighter(hp=1, defense=0, power=5, xp=0, base_speed=33, death_function=projectile_death)
+    path = ReversePath(caster.x, caster.y, target.x, target.y)
+    ai_component = ProjectileAI(path, objects)
+    projectile = Object(caster.x, caster.y, 'B', 'boomerang', libtcod.black, blocks=False, fighter=fighter_component,
+                        ai=ai_component)
+    objects.append(projectile)
+    projectile.send_to_back()
+
+
 def cast_throw_rock(caster, target):
-    fighter_component = Fighter(hp=1, defense=0, power=0, xp=0, base_speed=25, death_function=projectile_death)
-    ai_component = ProjectileAI(caster.x, caster.y, target.x, target.y, objects)
-    projectile = Object(caster.x, caster.y, '*', 'rock', libtcod.grey, blocks=False, fighter=fighter_component,
+    fighter_component = Fighter(hp=1, defense=0, power=3, xp=0, base_speed=25, death_function=projectile_death)
+    path = LinePath(caster.x, caster.y, target.x, target.y)
+    ai_component = ProjectileAI(path, objects)
+    projectile = Object(caster.x, caster.y, 'R', 'rock', libtcod.black, blocks=False, fighter=fighter_component,
                         ai=ai_component)
     objects.append(projectile)
     projectile.send_to_back()
@@ -870,7 +881,7 @@ def clear_objects():
 def new_game():
     global player, inventory, game_msgs, game_state, dungeon_level, game_map
 
-    player_fighter = Fighter(hp=30, defense=2, power=2, xp=0, death_function=player_death)  # TODO: Don't overload xp!
+    player_fighter = Fighter(hp=30, defense=2, power=10, xp=0, death_function=player_death)  # TODO: Don't overload xp!
     player = Object(0, 0, '@', 'player', libtcod.white, blocks=True, fighter=player_fighter)
 
     # TODO: Don't just add random properties that's silly.
@@ -1010,6 +1021,6 @@ panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
 # I don't want this to be real-time, so this line effectively does nothing!
 libtcod.sys_set_fps(LIMIT_FPS)
 
-libtcod.console_set_fullscreen(True)
+# libtcod.console_set_fullscreen(True)
 
 main_menu()
