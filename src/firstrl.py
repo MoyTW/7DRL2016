@@ -978,4 +978,6 @@ panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
 # I don't want this to be real-time, so this line effectively does nothing!
 libtcod.sys_set_fps(LIMIT_FPS)
 
+libtcod.console_set_fullscreen(True)
+
 main_menu()
