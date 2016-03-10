@@ -54,3 +54,5 @@ MAX_ROOMS = 30
 TIME_IN_TURN = 100
 
 SATELLITES_PER_LEVEL = [[30, 1], [25, 3], [20, 5]]
+
+POINT_DEFENSE_DESTROYER = 'point defense destroyer'

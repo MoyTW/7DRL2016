@@ -63,7 +63,8 @@ def create_v_tunnel(gm, y1, y2, x):
 def place_objects(gm, room):
     max_monsters = from_dungeon_level(dungeon_level, [[2, 1], [3, 4], [5, 6]])
     monster_chances = {'scout': 10,
-                       'gunship': from_dungeon_level(dungeon_level, [[10, 1], [30, 5], [60, 7]])}  # TODO: Enum?
+                       'gunship': from_dungeon_level(dungeon_level, [[10, 1], [30, 5], [60, 7]]),
+                       POINT_DEFENSE_DESTROYER: 9999}  # TODO: Enum?
 
     max_items = from_dungeon_level(dungeon_level, [[2, 1], [3, 4]])
     item_chances = {'heal': 35,
@@ -93,6 +94,12 @@ def place_objects(gm, room):
                 ai_component = GunshipMonster()
                 monster = Object(x, y, 'G', 'gunship', libtcod.darker_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
+            elif choice == POINT_DEFENSE_DESTROYER:
+                fighter_component = Fighter(hp=200, defense=10, power=0, xp=500, base_speed=300,
+                                            death_function=monster_death)
+                ai_component = PointDefenseDestroyerMonster()
+                monster = Object(x, y, 'P', POINT_DEFENSE_DESTROYER, libtcod.darker_green, blocks=True,
+                                 fighter=fighter_component, ai=ai_component)
 
             objects.append(monster)
 
@@ -415,6 +422,24 @@ class GunshipMonster(object):
         if self.current_cooldown > 0:
             self.current_cooldown -= 1
 
+
+class PointDefenseDestroyerMonster(object):
+    def __init__(self):
+        self.volly_cooldown = 5
+        self.current_cooldown = 0
+
+    def take_turn(self):
+        monster = self.owner
+
+        if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
+            if self.current_cooldown == 0:
+                fire_small_shotgun(caster=monster, target=player, spread=7, pellets=30)
+                fire_small_cannon(caster=monster, target=player)
+                self.current_cooldown += self.volly_cooldown
+            else:
+                fire_small_shotgun(caster=monster, target=player, spread=1, pellets=2)
+        if self.current_cooldown > 0:
+            self.current_cooldown -= 1
 
 class ProjectileAI(object):
     def __init__(self, path, _objects):
