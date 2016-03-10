@@ -587,6 +587,10 @@ def player_move_or_attack(dx, dy):
         player.move(dx, dy)
         fov_recompute = True
 
+    closest_enemy = closest_monster(3)
+    if closest_enemy:
+        fire_cutting_laser(player, closest_enemy)
+
 
 def menu(header, options, width):
     if len(options) > 26:
@@ -893,6 +897,16 @@ def fire_small_cannon(caster, target):
     path = LinePath(caster.x, caster.y, target.x, target.y)
     ai_component = ProjectileAI(path, objects)
     projectile = Object(caster.x, caster.y, 'c', 'small cannon shell', libtcod.red, blocks=False, is_projectile=True,
+                        fighter=fighter_component, ai=ai_component)
+    objects.append(projectile)
+    projectile.send_to_back()
+
+
+def fire_cutting_laser(caster, target):
+    fighter_component = Fighter(hp=1, defense=0, power=25, xp=0, base_speed=1, death_function=projectile_death)
+    path = LinePath(caster.x, caster.y, target.x, target.y)
+    ai_component = ProjectileAI(path, objects)
+    projectile = Object(caster.x, caster.y, '*', 'cutting laser beam', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
     objects.append(projectile)
     projectile.send_to_back()
