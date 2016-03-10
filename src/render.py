@@ -1,10 +1,10 @@
 import libtcodpy as libtcod
 from constants import *  # TODO: Bad programmer!
 
-color_dark_wall = libtcod.Color(0, 0, 100)
-color_light_wall = libtcod.Color(130, 110, 50)
-color_dark_ground = libtcod.Color(50, 50, 100)
-color_light_ground = libtcod.Color(200, 180, 50)
+color_dark_wall = libtcod.Color(120, 120, 160)
+color_light_wall = libtcod.Color(200, 200, 220)
+color_dark_ground = libtcod.Color(0, 0, 50)
+color_light_ground = libtcod.Color(25, 25, 50)
 
 
 def get_names_under_mouse(fov_map, camera_x, camera_y, mouse, objects):
