@@ -66,6 +66,10 @@ def render_bar(panel, x, y, total_width, name, value, maximum, bar_color, back_c
 
 
 def color_square_danger(con, fov_map, game_map, x, y, camera_x, camera_y):
+    # Don't try to color squares off the map
+    if x >= MAP_WIDTH or y >= MAP_HEIGHT:
+        return False
+
     visible = libtcod.map_is_in_fov(fov_map, x, y)
     wall = game_map[x][y].block_sight
     if visible and not wall:

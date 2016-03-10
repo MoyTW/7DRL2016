@@ -160,7 +160,8 @@ def make_game_map():
     # Ha the old room gen functions still are carving out. QUALITY CODE!
     for x in range(MAP_WIDTH):
         for y in range(MAP_HEIGHT):
-            if x == 0 or x == MAP_HEIGHT - 2 or y == 0 or y == MAP_HEIGHT - 2:
+            if x == 0 or x == MAP_WIDTH - 2 or x == MAP_WIDTH - 1\
+                    or y == 0 or y == MAP_HEIGHT - 2 or x == MAP_HEIGHT - 1:
                 gm[x][y].blocked = True
                 gm[x][y].block_sight = True
 
