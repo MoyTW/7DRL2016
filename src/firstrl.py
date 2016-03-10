@@ -62,9 +62,9 @@ def create_v_tunnel(gm, y1, y2, x):
 
 def place_objects(gm, room):
     max_monsters = from_dungeon_level(dungeon_level, [[2, 1], [3, 4], [5, 6]])
-    monster_chances = {'scout': 10,
-                       'gunship': from_dungeon_level(dungeon_level, [[10, 1], [30, 5], [60, 7]]),
-                       POINT_DEFENSE_DESTROYER: 9999}  # TODO: Enum?
+    monster_chances = {SCOUT: from_dungeon_level(dungeon_level, SCOUTS_PER_LEVEL),
+                       GUNSHIP: from_dungeon_level(dungeon_level, GUNSHIPS_PER_LEVEL),
+                       POINT_DEFENSE_DESTROYER: from_dungeon_level(dungeon_level, POINT_DEFENSE_DESTROYERS_PER_LEVEL)}
 
     max_items = from_dungeon_level(dungeon_level, [[2, 1], [3, 4]])
     item_chances = {'heal': 35,
@@ -82,17 +82,17 @@ def place_objects(gm, room):
         if not is_blocked(gm, x, y):
             choice = random_choice(monster_chances)
 
-            if choice == 'scout':
+            if choice == SCOUT:
                 fighter_component = Fighter(hp=10, defense=0, power=0, xp=30, base_speed=75,
                                             death_function=projectile_death)
                 ai_component = ScoutMonster()
-                monster = Object(x, y, 'S', 'scout', libtcod.darker_green, blocks=True, fighter=fighter_component,
+                monster = Object(x, y, 'S', SCOUT, libtcod.darker_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
-            elif choice == 'gunship':
+            elif choice == GUNSHIP:
                 fighter_component = Fighter(hp=50, defense=4, power=3, xp=100, base_speed=200,
                                             death_function=monster_death)
                 ai_component = GunshipMonster()
-                monster = Object(x, y, 'G', 'gunship', libtcod.darker_green, blocks=True, fighter=fighter_component,
+                monster = Object(x, y, 'G', GUNSHIP, libtcod.darker_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
             elif choice == POINT_DEFENSE_DESTROYER:
                 fighter_component = Fighter(hp=200, defense=10, power=0, xp=500, base_speed=300,

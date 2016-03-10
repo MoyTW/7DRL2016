@@ -55,4 +55,10 @@ TIME_IN_TURN = 100
 
 SATELLITES_PER_LEVEL = [[30, 1], [25, 3], [20, 5]]
 
+SCOUTS_PER_LEVEL = [[10, 1]]
+GUNSHIPS_PER_LEVEL = [[10, 1], [30, 2]]
+POINT_DEFENSE_DESTROYERS_PER_LEVEL = [[10, 2], [30, 3]]
+
+SCOUT = 'scout'
+GUNSHIP = 'gunship'
 POINT_DEFENSE_DESTROYER = 'point defense destroyer'
