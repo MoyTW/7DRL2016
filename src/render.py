@@ -5,7 +5,7 @@ color_dark_wall = libtcod.Color(120, 120, 160)
 color_light_wall = libtcod.Color(200, 200, 220)
 color_dark_ground = libtcod.Color(0, 0, 50)
 color_light_ground = libtcod.Color(25, 25, 50)
-color_danger = libtcod.Color(200, 0, 50)
+color_danger = libtcod.orange
 
 
 def get_names_under_mouse(fov_map, camera_x, camera_y, mouse, objects):

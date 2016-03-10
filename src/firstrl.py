@@ -817,7 +817,7 @@ def cast_throw_boomerang(caster, target):
     fighter_component = Fighter(hp=1, defense=0, power=5, xp=0, base_speed=33, death_function=projectile_death)
     path = ReversePath(caster.x, caster.y, target.x, target.y)
     ai_component = ProjectileAI(path, objects)
-    projectile = Object(caster.x, caster.y, 'B', 'boomerang', libtcod.black, blocks=False, fighter=fighter_component,
+    projectile = Object(caster.x, caster.y, 'B', 'boomerang', libtcod.red, blocks=False, fighter=fighter_component,
                         ai=ai_component)
     objects.append(projectile)
     projectile.send_to_back()
@@ -827,7 +827,7 @@ def cast_throw_rock(caster, target):
     fighter_component = Fighter(hp=1, defense=0, power=3, xp=0, base_speed=25, death_function=projectile_death)
     path = LinePath(caster.x, caster.y, target.x, target.y)
     ai_component = ProjectileAI(path, objects)
-    projectile = Object(caster.x, caster.y, 'R', 'rock', libtcod.black, blocks=False, fighter=fighter_component,
+    projectile = Object(caster.x, caster.y, 'R', 'rock', libtcod.red, blocks=False, fighter=fighter_component,
                         ai=ai_component)
     objects.append(projectile)
     projectile.send_to_back()
