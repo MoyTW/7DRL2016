@@ -96,6 +96,16 @@ def place_objects(gm, room):
 
             objects.append(monster)
 
+    num_satellites = from_dungeon_level(dungeon_level, SATELLITES_PER_LEVEL)
+    for _ in range(num_satellites):
+        x = libtcod.random_get_int(0, room.x1 + 1, room.x2 - 1)
+        y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
+
+        if not is_blocked(gm, x, y):
+            fighter_component = Fighter(hp=1, defense=0, power=0, xp=0, death_function=projectile_death)
+            monster = Object(x, y, '#', 'satellite', libtcod.white, blocks=True, fighter=fighter_component)
+            objects.append(monster)
+
     # Place items
     num_items = libtcod.random_get_int(0, 0, max_items)
     for _ in range(num_items):
@@ -277,7 +287,6 @@ class Object(object):
             self.x += dx
             self.y += dy
         return blocked
-
 
     # TODO: Pull AI logic out of base Object class!
     # TODO: Take other instead of x/y!
@@ -972,7 +981,7 @@ def play_game():
         # TODO: Kind of messy way of structuring this!
         time = time_to_next_event(objects)
         for obj in objects:
-            if obj.fighter:
+            if obj.fighter and (obj.ai or obj == player):
                 obj.fighter.time_until_turn -= time
 
         if player.fighter.time_until_turn == 0:
