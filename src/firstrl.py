@@ -293,19 +293,19 @@ class Object(object):
         return math.sqrt((x - self.x) ** 2 + (y - self.y) ** 2)
 
     # TODO: Have draw take the buffer to draw to as a parameter!
-    def draw(self):
+    def draw(self, console):
         if libtcod.map_is_in_fov(fov_map, self.x, self.y) or \
                 (self.always_visible and game_map[self.x][self.y].explored):
             (x, y) = render.to_camera_coordinates(self.x, self.y, camera_x, camera_y)
 
             if x is not None:
-                libtcod.console_set_default_foreground(con, self.color)
-                libtcod.console_put_char(con, x, y, self.char, libtcod.BKGND_NONE)
+                libtcod.console_set_default_foreground(console, self.color)
+                libtcod.console_put_char(console, x, y, self.char, libtcod.BKGND_NONE)
 
     # TODO: Have clear take the buffer to draw to as a parameter!
-    def clear(self):
+    def clear(self, console):
         (x, y) = render.to_camera_coordinates(self.x, self.y, camera_x, camera_y)
-        libtcod.console_put_char(con, x, y, ' ', libtcod.BKGND_NONE)
+        libtcod.console_put_char(console, x, y, ' ', libtcod.BKGND_NONE)
 
     def send_to_back(self):
         global objects
@@ -874,7 +874,7 @@ def message(new_msg, color=libtcod.white):
 
 def clear_objects():
     for o in objects:
-        o.clear()
+        o.clear(con)
 
 
 # =================================================== MAIN LOOP ==================================================

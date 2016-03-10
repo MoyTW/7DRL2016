@@ -72,15 +72,14 @@ def render_all(fov_recompute, player, objects, fov_map, game_map, con, panel, ga
 
     for o in objects:
         if o != player:
-            o.draw()
-    player.draw()
+            o.draw(con)
+    player.draw(con)
 
     if fov_recompute:
         fov_recompute = False
         libtcod.map_compute_fov(fov_map, player.x, player.y, TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
         libtcod.console_clear(con)
 
-    # Underscore because shadowing
     for y in range(CAMERA_HEIGHT):
         for x in range(CAMERA_WIDTH):
             (map_x, map_y) = (camera_x + x, camera_y + y)
