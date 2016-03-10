@@ -136,9 +136,15 @@ def make_game_map():
 
     objects = [player]
 
-    gm = [[Tile(True)
+    gm = [[Tile(False)
            for _ in range(MAP_HEIGHT)]
           for _ in range(MAP_WIDTH)]
+    # Ha the old room gen functions still are carving out. QUALITY CODE!
+    for x in range(MAP_WIDTH):
+        for y in range(MAP_HEIGHT):
+            if x == 0 or x == MAP_HEIGHT - 2 or y == 0 or y == MAP_HEIGHT - 2:
+                gm[x][y].blocked = True
+                gm[x][y].block_sight = True
 
     rooms = []
     # You could just use the count of rooms here, couldn't you?
