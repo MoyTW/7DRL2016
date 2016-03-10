@@ -414,6 +414,7 @@ class GunshipMonster(object):
         monster = self.owner
 
         if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
+            monster.move_towards(player.x, player.y)
             if self.current_cooldown == 0:
                 fire_small_shotgun(caster=monster, target=player)
                 self.current_cooldown += self.cooldown
@@ -432,6 +433,7 @@ class PointDefenseDestroyerMonster(object):
         monster = self.owner
 
         if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
+            monster.move_towards(player.x, player.y)
             if self.current_cooldown == 0:
                 fire_small_shotgun(caster=monster, target=player, spread=7, pellets=30)
                 fire_small_cannon(caster=monster, target=player)
