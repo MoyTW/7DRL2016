@@ -63,7 +63,7 @@ def create_v_tunnel(gm, y1, y2, x):
 def place_objects(gm, room):
     max_monsters = from_dungeon_level(dungeon_level, [[2, 1], [3, 4], [5, 6]])
     monster_chances = {'orc': 1,
-                       'troll': from_dungeon_level(dungeon_level, [[9999, 1], [30, 5], [60, 7]])}  # TODO: Enum?
+                       'gunship': from_dungeon_level(dungeon_level, [[9999, 1], [30, 5], [60, 7]])}  # TODO: Enum?
 
     max_items = from_dungeon_level(dungeon_level, [[2, 1], [3, 4]])
     item_chances = {'heal': 35,
@@ -87,11 +87,11 @@ def place_objects(gm, room):
 
                 monster = Object(x, y, 'o', 'orc', libtcod.desaturated_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
-            elif choice == 'troll':
-                fighter_component = Fighter(hp=10, defense=4, power=3, xp=100, death_function=monster_death)
-                ai_component = TosserMonster()
-
-                monster = Object(x, y, 'T', 'troll', libtcod.darker_green, blocks=True, fighter=fighter_component,
+            elif choice == 'gunship':
+                fighter_component = Fighter(hp=10, defense=4, power=3, xp=100, base_speed=200,
+                                            death_function=monster_death)
+                ai_component = GunshipMonster()
+                monster = Object(x, y, 'G', 'gunship', libtcod.darker_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
 
             objects.append(monster)
@@ -398,8 +398,8 @@ class BasicMonster(object):
                 monster.fighter.attack(player)
 
 
-class TosserMonster(object):
-    def __init__(self, cooldown=2):
+class GunshipMonster(object):
+    def __init__(self, cooldown=4):
         self.cooldown = cooldown
         self.current_cooldown = 0
 
@@ -408,10 +408,10 @@ class TosserMonster(object):
 
         if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
             if self.current_cooldown == 0:
-                cast_throw_boomerang(caster=monster, target=player)
+                fire_small_shotgun(caster=monster, target=player)
                 self.current_cooldown += self.cooldown
             else:
-                cast_throw_rock(caster=monster, target=player)
+                fire_small_cannon(caster=monster, target=player)
         if self.current_cooldown > 0:
             self.current_cooldown -= 1
 
@@ -839,12 +839,29 @@ def cast_throw_boomerang(caster, target):
     projectile.send_to_back()
 
 
-def cast_throw_rock(caster, target):
-    fighter_component = Fighter(hp=1, defense=0, power=3, xp=0, base_speed=25, death_function=projectile_death)
+def single_small_shotgun(source_x, source_y, target_x, target_y):
+    fighter_component = Fighter(hp=1, defense=0, power=1, xp=0, base_speed=25, death_function=projectile_death)
+    path = LinePath(source_x, source_y, target_x, target_y)
+    ai_component = ProjectileAI(path, objects)
+    projectile = Object(source_x, source_y, 's', 'small shotgun shell', libtcod.red, blocks=False,
+                        fighter=fighter_component, ai=ai_component)
+    objects.append(projectile)
+    projectile.send_to_back()
+
+
+def fire_small_shotgun(caster, target, spread=5, pellets=5):
+    for _ in range(pellets):
+        dx = libtcod.random_get_int(0, 0, spread*2 + 1) - 2
+        dy = libtcod.random_get_int(0, 0, spread*2 + 1) - 2
+        single_small_shotgun(caster.x, caster.y, target.x + dx, target.y + dy)
+
+
+def fire_small_cannon(caster, target):
+    fighter_component = Fighter(hp=1, defense=0, power=5, xp=0, base_speed=50, death_function=projectile_death)
     path = LinePath(caster.x, caster.y, target.x, target.y)
     ai_component = ProjectileAI(path, objects)
-    projectile = Object(caster.x, caster.y, 'R', 'rock', libtcod.red, blocks=False, fighter=fighter_component,
-                        ai=ai_component)
+    projectile = Object(caster.x, caster.y, 'c', 'small cannon shell', libtcod.red, blocks=False,
+                        fighter=fighter_component, ai=ai_component)
     objects.append(projectile)
     projectile.send_to_back()
 
