@@ -5,6 +5,7 @@ color_dark_wall = libtcod.Color(120, 120, 160)
 color_light_wall = libtcod.Color(200, 200, 220)
 color_dark_ground = libtcod.Color(0, 0, 50)
 color_light_ground = libtcod.Color(25, 25, 50)
+color_danger = libtcod.Color(200, 0, 50)
 
 
 def get_names_under_mouse(fov_map, camera_x, camera_y, mouse, objects):
@@ -64,6 +65,27 @@ def render_bar(panel, x, y, total_width, name, value, maximum, bar_color, back_c
                              name + ': ' + str(value) + '/' + str(maximum))
 
 
+def color_square_danger(con, fov_map, game_map, x, y, camera_x, camera_y):
+    visible = libtcod.map_is_in_fov(fov_map, x, y)
+    wall = game_map[x][y].block_sight
+    if visible and not wall:
+        libtcod.console_set_char_background(con, x - camera_x, y - camera_y, color_danger, libtcod.BKGND_SET)
+        return True
+    return False
+
+
+def draw_paths(con, fov_map, game_map, camera_x, camera_y, objects):
+    for obj in objects:
+        if obj.ai and hasattr(obj.ai, 'path'):
+            path = obj.ai.path
+            continue_draw = True
+            for (x, y) in path.project(5):
+                if continue_draw:
+                    continue_draw = color_square_danger(con, fov_map, game_map, x, y, camera_x, camera_y)
+                else:
+                    break
+
+
 def render_all(fov_recompute, player, objects, fov_map, game_map, con, panel, game_msgs, dungeon_level,
                mouse, camera_x, camera_y):  # TODO: Silly
 
@@ -97,6 +119,8 @@ def render_all(fov_recompute, player, objects, fov_map, game_map, con, panel, ga
                 else:
                     libtcod.console_set_char_background(con, x, y, color_light_ground, libtcod.BKGND_SET)
                 game_map[map_x][map_y].explored = True
+
+    draw_paths(con, fov_map, game_map, camera_x, camera_y, objects)
 
     libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
 
