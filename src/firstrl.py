@@ -727,7 +727,8 @@ def target_tile(max_range=None):
                                                                 objects=objects, fov_map=fov_map, game_map=game_map,
                                                                 con=con, panel=panel, game_msgs=game_msgs,
                                                                 dungeon_level=dungeon_level, mouse=mouse,
-                                                                camera_x=camera_x, camera_y=camera_y)
+                                                                camera_x=camera_x, camera_y=camera_y,
+                                                                timeframe=player.fighter.speed)
 
         (x, y) = (camera_x + mouse.cx, camera_y + mouse.cy)
 
@@ -953,7 +954,8 @@ def play_game():
                                                                 objects=objects, fov_map=fov_map, game_map=game_map,
                                                                 con=con, panel=panel, game_msgs=game_msgs,
                                                                 dungeon_level=dungeon_level, mouse=mouse,
-                                                                camera_x=camera_x, camera_y=camera_y)
+                                                                camera_x=camera_x, camera_y=camera_y,
+                                                                timeframe=player.fighter.speed)
         libtcod.console_flush()
 
         check_level_up()

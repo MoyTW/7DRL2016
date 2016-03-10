@@ -74,12 +74,15 @@ def color_square_danger(con, fov_map, game_map, x, y, camera_x, camera_y):
     return False
 
 
-def draw_paths(con, fov_map, game_map, camera_x, camera_y, objects):
+def draw_paths(con, fov_map, game_map, camera_x, camera_y, objects, timeframe):
     for obj in objects:
-        if obj.ai and hasattr(obj.ai, 'path'):
+        if obj.ai and hasattr(obj.ai, 'path') and obj.fighter:
             path = obj.ai.path
             continue_draw = True
-            for (x, y) in path.project(5):
+
+            moves_in_timeframe = int(timeframe / obj.fighter.speed)
+
+            for (x, y) in path.project(moves_in_timeframe):
                 if continue_draw:
                     continue_draw = color_square_danger(con, fov_map, game_map, x, y, camera_x, camera_y)
                 else:
@@ -87,7 +90,7 @@ def draw_paths(con, fov_map, game_map, camera_x, camera_y, objects):
 
 
 def render_all(fov_recompute, player, objects, fov_map, game_map, con, panel, game_msgs, dungeon_level,
-               mouse, camera_x, camera_y):  # TODO: Silly
+               mouse, camera_x, camera_y, timeframe):  # TODO: Silly
 
     (camera_x, camera_y, recompute) = move_camera(player.x, player.y, camera_x, camera_y)
     fov_recompute = fov_recompute or recompute
@@ -120,7 +123,7 @@ def render_all(fov_recompute, player, objects, fov_map, game_map, con, panel, ga
                     libtcod.console_set_char_background(con, x, y, color_light_ground, libtcod.BKGND_SET)
                 game_map[map_x][map_y].explored = True
 
-    draw_paths(con, fov_map, game_map, camera_x, camera_y, objects)
+    draw_paths(con, fov_map, game_map, camera_x, camera_y, objects, timeframe)
 
     libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
 
