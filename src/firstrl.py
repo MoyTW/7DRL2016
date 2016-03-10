@@ -62,8 +62,8 @@ def create_v_tunnel(gm, y1, y2, x):
 
 def place_objects(gm, room):
     max_monsters = from_dungeon_level(dungeon_level, [[2, 1], [3, 4], [5, 6]])
-    monster_chances = {'orc': 1,
-                       'gunship': from_dungeon_level(dungeon_level, [[9999, 1], [30, 5], [60, 7]])}  # TODO: Enum?
+    monster_chances = {'scout': 10,
+                       'gunship': from_dungeon_level(dungeon_level, [[10, 1], [30, 5], [60, 7]])}  # TODO: Enum?
 
     max_items = from_dungeon_level(dungeon_level, [[2, 1], [3, 4]])
     item_chances = {'heal': 35,
@@ -81,14 +81,14 @@ def place_objects(gm, room):
         if not is_blocked(gm, x, y):
             choice = random_choice(monster_chances)
 
-            if choice == 'orc':
-                fighter_component = Fighter(hp=10, defense=0, power=3, xp=35, death_function=monster_death)
-                ai_component = BasicMonster()
-
-                monster = Object(x, y, 'o', 'orc', libtcod.desaturated_green, blocks=True, fighter=fighter_component,
+            if choice == 'scout':
+                fighter_component = Fighter(hp=10, defense=0, power=0, xp=30, base_speed=75,
+                                            death_function=projectile_death)
+                ai_component = ScoutMonster()
+                monster = Object(x, y, 'S', 'scout', libtcod.darker_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
             elif choice == 'gunship':
-                fighter_component = Fighter(hp=10, defense=4, power=3, xp=100, base_speed=200,
+                fighter_component = Fighter(hp=50, defense=4, power=3, xp=100, base_speed=200,
                                             death_function=monster_death)
                 ai_component = GunshipMonster()
                 monster = Object(x, y, 'G', 'gunship', libtcod.darker_green, blocks=True, fighter=fighter_component,
@@ -388,14 +388,14 @@ class Fighter(object):
             self.hp = self.max_hp
 
 
-class BasicMonster(object):
+class ScoutMonster(object):
     def take_turn(self):
         monster = self.owner
         if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
-            if monster.distance_to(player) >= 2:
+            if monster.distance_to(player) >= 5:
                 monster.move_towards(player.x, player.y)
             elif player.fighter.hp > 0:
-                monster.fighter.attack(player)
+                fire_small_shotgun(caster=monster, target=player, spread=2, pellets=3)
 
 
 class GunshipMonster(object):
@@ -915,7 +915,7 @@ def clear_objects():
 def new_game():
     global player, inventory, game_msgs, game_state, dungeon_level, game_map
 
-    player_fighter = Fighter(hp=30, defense=2, power=10, xp=0, death_function=player_death)  # TODO: Don't overload xp!
+    player_fighter = Fighter(hp=30, defense=0, power=10, xp=0, death_function=player_death)  # TODO: Don't overload xp!
     player = Object(0, 0, '@', 'player', libtcod.white, blocks=True, fighter=player_fighter)
 
     # TODO: Don't just add random properties that's silly.
