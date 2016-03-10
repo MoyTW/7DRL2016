@@ -255,8 +255,8 @@ def from_dungeon_level(_dungeon_level, table):
 
 # Object is using 'con' as the buffer, which is unbound! Does that...work?
 class Object(object):
-    def __init__(self, x, y, char, name, color, blocks=False, always_visible=False, fighter=None, ai=None, item=None,
-                 equipment=None):
+    def __init__(self, x, y, char, name, color, blocks=False, always_visible=False, is_projectile=False, fighter=None,
+                 ai=None, item=None, equipment=None):
         self.x = x
         self.y = y
         self.char = char
@@ -264,6 +264,7 @@ class Object(object):
         self.color = color
         self.blocks = blocks
         self.always_visible = always_visible
+        self.is_projectile = is_projectile
 
         self.fighter = fighter
         if self.fighter:
@@ -445,6 +446,7 @@ class PointDefenseDestroyerMonster(object):
         if self.current_cooldown > 0:
             self.current_cooldown -= 1
 
+
 class ProjectileAI(object):
     def __init__(self, path, _objects):
         self.path = path
@@ -458,7 +460,7 @@ class ProjectileAI(object):
 
         if blocked:
             for obj in objects:  # TODO: Ugh this is still gnarly
-                if obj.x == next_x and obj.y == next_y and obj.fighter and obj != monster:
+                if obj.x == next_x and obj.y == next_y and obj.fighter and obj != monster and not obj.is_projectile:
                     monster.fighter.attack(obj)
                     break
             monster.fighter.death_function(monster)
@@ -811,7 +813,8 @@ def closest_monster(max_range):
     closest_dist = max_range + 1
 
     for obj in objects:
-        if obj.fighter and not obj == player and libtcod.map_is_in_fov(fov_map, obj.x, obj.y):
+        if obj.fighter and obj.ai and not obj.is_projectile and not obj == player and \
+                libtcod.map_is_in_fov(fov_map, obj.x, obj.y):
             dist = player.distance_to(obj)
             if dist <= closest_dist:
                 closest_enemy = obj
@@ -872,7 +875,7 @@ def single_small_shotgun(source_x, source_y, target_x, target_y):
     fighter_component = Fighter(hp=1, defense=0, power=1, xp=0, base_speed=25, death_function=projectile_death)
     path = LinePath(source_x, source_y, target_x, target_y)
     ai_component = ProjectileAI(path, objects)
-    projectile = Object(source_x, source_y, 's', 'small shotgun shell', libtcod.red, blocks=False,
+    projectile = Object(source_x, source_y, 's', 'small shotgun shell', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
     objects.append(projectile)
     projectile.send_to_back()
@@ -889,7 +892,7 @@ def fire_small_cannon(caster, target):
     fighter_component = Fighter(hp=1, defense=0, power=5, xp=0, base_speed=50, death_function=projectile_death)
     path = LinePath(caster.x, caster.y, target.x, target.y)
     ai_component = ProjectileAI(path, objects)
-    projectile = Object(caster.x, caster.y, 'c', 'small cannon shell', libtcod.red, blocks=False,
+    projectile = Object(caster.x, caster.y, 'c', 'small cannon shell', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
     objects.append(projectile)
     projectile.send_to_back()
