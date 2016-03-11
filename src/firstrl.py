@@ -37,7 +37,15 @@ class Zone(object):
 
     def summary(self):
         (x, y) = self.center()
-        return self.name + ': (' + str(x) + ',' + str(y) + ')'
+        top_line = self.name + ': (' + str(x) + ',' + str(y) + ')'
+
+        item_names = map(lambda i: i.name, self.items)
+        item_line = 'Items: ' + ','.join(item_names)
+
+        enemy_names = map(lambda e: e.name, self.enemies)
+        enemy_line = 'Enemies: ' + ','.join(enemy_names)
+
+        return top_line + '\n' + enemy_line + '\n' + item_line + '\n'
 
 
 def place_objects(gm, zone):
