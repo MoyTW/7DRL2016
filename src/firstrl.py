@@ -19,17 +19,25 @@ class Tile(object):
 
 
 class Zone(object):
-    def __init__(self, x, y, w, h):
+    def __init__(self, x, y, w, h, name):
         self.x1 = x
         self.y1 = y
         self.x2 = x + w
         self.y2 = y + h
+        self.name = 'Zone ' + str(name)
+
+        self.enemies = []
+        self.items = []
 
     def center(self):
         return (self.x1 + self.x2) / 2, (self.y1 + self.y2) / 2
 
     def intersect(self, other):
         return self.x1 <= other.x2 and self.x2 >= other.x1 and self.y1 <= other.y2 and self.y2 >= other.y1
+
+    def summary(self):
+        (x, y) = self.center()
+        return self.name + ': (' + str(x) + ',' + str(y) + ')'
 
 
 def place_objects(gm, zone):
@@ -73,6 +81,7 @@ def place_objects(gm, zone):
                 monster = Object(x, y, 'P', POINT_DEFENSE_DESTROYER, libtcod.darker_green, blocks=True,
                                  fighter=fighter_component, ai=ai_component)
 
+            zone.enemies.append(monster)
             objects.append(monster)
 
     # Place items
@@ -106,6 +115,7 @@ def place_objects(gm, zone):
                 item = Object(x, y, '[', 'shield', libtcod.sky, equipment=equipment_component, item=Item())
 
             objects.append(item)
+            zone.items.append(item)
             item.send_to_back(objects)
 
     num_satellites = from_dungeon_level(dungeon_level, SATELLITES_PER_LEVEL)
@@ -121,7 +131,7 @@ def place_objects(gm, zone):
 
 def make_game_map():
     # OH GOD! WHAT IS SCOPE EVEN
-    global objects, stairs
+    global objects, stairs, zones  # TODO: Haha I'm making it WORSE
 
     objects = [player]
 
@@ -147,7 +157,7 @@ def make_game_map():
         x = libtcod.random_get_int(0, 0, MAP_WIDTH - w - 1)
         y = libtcod.random_get_int(0, 0, MAP_HEIGHT - h - 1)
 
-        new_zone = Zone(x, y, w, h)
+        new_zone = Zone(x, y, w, h, len(zones))
 
         failed = False
         for other_zone in zones:
@@ -168,6 +178,7 @@ def make_game_map():
 
     # TODO: Having trouble keeping track of scope/assignment!
     stairs = Object(new_x, new_y, '<', 'stairs', libtcod.white, always_visible=True)
+    zones[-1].items.append(stairs)
     objects.append(stairs)
     stairs.send_to_back(objects)
 
@@ -588,6 +599,11 @@ def handle_keys():
                        str(player.fighter.max_hp) + '\nAttack: ' + str(player.fighter.power) + '\nDefense: ' +
                        str(player.fighter.defense),
                        CHARACTER_SCREEN_WIDTH)
+            elif key_char == 'r':
+                delimiter = '\n'
+                zone_summaries = map(lambda z: z.summary(), zones)
+                msg = delimiter.join(zone_summaries)
+                msgbox(msg)
 
             return GAME_STATE_DIDNT_TAKE_TURN
 
