@@ -122,7 +122,7 @@ def place_objects(gm, room):
                 item = Object(x, y, '[', 'shield', libtcod.sky, equipment=equipment_component)
 
             objects.append(item)
-            item.send_to_back()
+            item.send_to_back(objects)
 
     num_satellites = from_dungeon_level(dungeon_level, SATELLITES_PER_LEVEL)
     for _ in range(num_satellites):
@@ -188,7 +188,7 @@ def make_game_map():
     # TODO: Having trouble keeping track of scope/assignment!
     stairs = Object(new_x, new_y, '<', 'stairs', libtcod.white, always_visible=True,)
     objects.append(stairs)
-    stairs.send_to_back()
+    stairs.send_to_back(objects)
 
     return gm
 
@@ -309,10 +309,9 @@ class Object(object):
         (x, y) = render.to_camera_coordinates(self.x, self.y, camera_x, camera_y)
         libtcod.console_put_char(console, x, y, ' ', libtcod.BKGND_NONE)
 
-    def send_to_back(self):
-        global objects
-        objects.remove(self)
-        objects.insert(0, self)
+    def send_to_back(self, _objects):
+        _objects.remove(self)
+        _objects.insert(0, self)
 
 
 class Fighter(object):
@@ -495,7 +494,7 @@ class Item(object):
         inventory.remove(self.owner)
         self.owner.x = player.x
         self.owner.y = player.y
-        self.owner.send_to_back()
+        self.owner.send_to_back(objects)
 
 
 class Equipment(object):
@@ -736,7 +735,7 @@ def monster_death(monster):
     monster.fighter = None
     monster.ai = None
     monster.name = 'Remains of ' + monster.name
-    monster.send_to_back()
+    monster.send_to_back(objects)
 
 
 def projectile_death(projectile):
@@ -849,7 +848,7 @@ def cast_throw_boomerang(caster, target):
     projectile = Object(caster.x, caster.y, 'B', 'boomerang', libtcod.red, blocks=False, fighter=fighter_component,
                         ai=ai_component)
     objects.append(projectile)
-    projectile.send_to_back()
+    projectile.send_to_back(objects)
 
 
 def single_small_shotgun(source_x, source_y, target_x, target_y):
@@ -859,7 +858,7 @@ def single_small_shotgun(source_x, source_y, target_x, target_y):
     projectile = Object(source_x, source_y, 's', 'small shotgun shell', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
     objects.append(projectile)
-    projectile.send_to_back()
+    projectile.send_to_back(objects)
 
 
 def fire_small_shotgun(caster, target, spread=5, pellets=5):
@@ -876,7 +875,7 @@ def fire_small_cannon(caster, target):
     projectile = Object(caster.x, caster.y, 'c', 'small cannon shell', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
     objects.append(projectile)
-    projectile.send_to_back()
+    projectile.send_to_back(objects)
 
 
 def fire_cutting_laser(caster, target):
@@ -886,7 +885,7 @@ def fire_cutting_laser(caster, target):
     projectile = Object(caster.x, caster.y, '*', 'cutting laser beam', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
     objects.append(projectile)
-    projectile.send_to_back()
+    projectile.send_to_back(objects)
 
 
 def save_game():
