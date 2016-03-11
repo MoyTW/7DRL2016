@@ -608,9 +608,9 @@ def handle_keys():
                        str(player.fighter.defense),
                        CHARACTER_SCREEN_WIDTH)
             elif key_char == 'r':
-                delimiter = '\n'
                 zone_summaries = map(lambda z: z.summary(), zones)
-                msg = delimiter.join(zone_summaries)
+                position_header = 'Your position: (' + str(player.x) + ',' + str(player.y) + ')'
+                msg = position_header + '\n\n' + '\n'.join(zone_summaries)
                 msgbox(msg)
 
             return GAME_STATE_DIDNT_TAKE_TURN
