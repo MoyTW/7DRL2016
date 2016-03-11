@@ -280,18 +280,19 @@ class PointDefenseDestroyerMonster(object):
 
 
 class ProjectileAI(object):
-    def __init__(self, path, _objects):
+    def __init__(self, path, game_map, objects):
         self.path = path
-        self.objects = _objects
+        self.game_map = game_map
+        self.objects = objects
 
     def take_turn(self):
         monster = self.owner
 
         (next_x, next_y) = self.path.step()
-        blocked = monster.move_towards(next_x, next_y, game_map, objects)
+        blocked = monster.move_towards(next_x, next_y, self.game_map, self.objects)
 
         if blocked:
-            for obj in objects:  # TODO: Ugh this is still gnarly
+            for obj in self.objects:  # TODO: Ugh this is still gnarly
                 if obj.x == next_x and obj.y == next_y and obj.fighter and obj != monster and not obj.is_projectile:
                     monster.fighter.attack(obj)
                     break
@@ -694,7 +695,7 @@ def cast_confuse():
 def cast_throw_boomerang(caster, target):
     fighter_component = Fighter(player=player, hp=1, defense=0, power=5, xp=0, base_speed=33, death_function=projectile_death)
     path = ReversePath(caster.x, caster.y, target.x, target.y)
-    ai_component = ProjectileAI(path, objects)
+    ai_component = ProjectileAI(path, game_map, objects)
     projectile = Object(caster.x, caster.y, 'B', 'boomerang', libtcod.red, blocks=False, fighter=fighter_component,
                         ai=ai_component)
     objects.append(projectile)
@@ -704,7 +705,7 @@ def cast_throw_boomerang(caster, target):
 def single_small_shotgun(source_x, source_y, target_x, target_y):
     fighter_component = Fighter(player=player, hp=1, defense=0, power=1, xp=0, base_speed=25, death_function=projectile_death)
     path = LinePath(source_x, source_y, target_x, target_y)
-    ai_component = ProjectileAI(path, objects)
+    ai_component = ProjectileAI(path, game_map, objects)
     projectile = Object(source_x, source_y, 's', 'small shotgun shell', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
     objects.append(projectile)
@@ -721,7 +722,7 @@ def fire_small_shotgun(caster, target, spread=5, pellets=5):
 def fire_small_cannon(caster, target):
     fighter_component = Fighter(player=player, hp=1, defense=0, power=5, xp=0, base_speed=50, death_function=projectile_death)
     path = LinePath(caster.x, caster.y, target.x, target.y)
-    ai_component = ProjectileAI(path, objects)
+    ai_component = ProjectileAI(path, game_map, objects)
     projectile = Object(caster.x, caster.y, 'c', 'small cannon shell', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
     objects.append(projectile)
@@ -731,7 +732,7 @@ def fire_small_cannon(caster, target):
 def fire_cutting_laser(caster, target):
     fighter_component = Fighter(player=player, hp=1, defense=0, power=25, xp=0, base_speed=1, death_function=projectile_death)
     path = LinePath(caster.x, caster.y, target.x, target.y)
-    ai_component = ProjectileAI(path, objects)
+    ai_component = ProjectileAI(path, game_map, objects)
     projectile = Object(caster.x, caster.y, '*', 'cutting laser beam', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
     objects.append(projectile)
