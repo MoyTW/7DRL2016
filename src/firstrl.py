@@ -18,7 +18,7 @@ class Tile(object):
         self.block_sight = block_sight
 
 
-class Rect(object):
+class Zone(object):
     def __init__(self, x, y, w, h):
         self.x1 = x
         self.y1 = y
@@ -32,7 +32,7 @@ class Rect(object):
         return self.x1 <= other.x2 and self.x2 >= other.x1 and self.y1 <= other.y2 and self.y2 >= other.y1
 
 
-def place_objects(gm, room):
+def place_objects(gm, zone):
     max_monsters = from_dungeon_level(dungeon_level, [[2, 1], [3, 4], [5, 6]])
     monster_chances = {SCOUT: from_dungeon_level(dungeon_level, SCOUTS_PER_LEVEL),
                        GUNSHIP: from_dungeon_level(dungeon_level, GUNSHIPS_PER_LEVEL),
@@ -48,8 +48,8 @@ def place_objects(gm, room):
 
     num_monsters = 1  # libtcod.random_get_int(0, 0, max_monsters)
     for _ in range(num_monsters):
-        x = libtcod.random_get_int(0, room.x1 + 1, room.x2 - 1)
-        y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
+        x = libtcod.random_get_int(0, zone.x1 + 1, zone.x2 - 1)
+        y = libtcod.random_get_int(0, zone.y1 + 1, zone.y2 - 1)
 
         if not is_blocked(x, y, gm, objects):
             choice = random_choice(monster_chances)
@@ -78,8 +78,8 @@ def place_objects(gm, room):
     # Place items
     num_items = libtcod.random_get_int(0, 0, max_items)
     for _ in range(num_items):
-        x = libtcod.random_get_int(0, room.x1 + 1, room.x2 - 1)
-        y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
+        x = libtcod.random_get_int(0, zone.x1 + 1, zone.x2 - 1)
+        y = libtcod.random_get_int(0, zone.y1 + 1, zone.y2 - 1)
 
         if not is_blocked(x, y, gm, objects):
             choice = random_choice(item_chances)
@@ -110,8 +110,8 @@ def place_objects(gm, room):
 
     num_satellites = from_dungeon_level(dungeon_level, SATELLITES_PER_LEVEL)
     for _ in range(num_satellites):
-        x = libtcod.random_get_int(0, room.x1 + 1, room.x2 - 1)
-        y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
+        x = libtcod.random_get_int(0, zone.x1 + 1, zone.x2 - 1)
+        y = libtcod.random_get_int(0, zone.y1 + 1, zone.y2 - 1)
 
         if not is_blocked(x, y, gm, objects):
             fighter_component = Fighter(hp=1, defense=9999, power=0, xp=0, death_function=projectile_death)
@@ -137,34 +137,34 @@ def make_game_map():
                 gm[x][y].blocked = True
                 gm[x][y].block_sight = True
 
-    rooms = []
+    zones = []
 
     for r in range(MAX_ROOMS):
-        # Size of room
+        # Size of zone
         w = libtcod.random_get_int(0, ROOM_MIN_SIZE, ROOM_MAX_SIZE)
         h = libtcod.random_get_int(0, ROOM_MIN_SIZE, ROOM_MAX_SIZE)
-        # Position of room
+        # Position of zone
         x = libtcod.random_get_int(0, 0, MAP_WIDTH - w - 1)
         y = libtcod.random_get_int(0, 0, MAP_HEIGHT - h - 1)
 
-        new_room = Rect(x, y, w, h)
+        new_zone = Zone(x, y, w, h)
 
         failed = False
-        for other_room in rooms:
-            if new_room.intersect(other_room):
+        for other_zone in zones:
+            if new_zone.intersect(other_zone):
                 failed = True
                 break
 
         if not failed:
-            (new_x, new_y) = new_room.center()
+            (new_x, new_y) = new_zone.center()
 
-            place_objects(gm, new_room)
+            place_objects(gm, new_zone)
 
-            if len(rooms) == 0:
+            if len(zones) == 0:
                 player.x = new_x
                 player.y = new_y
 
-            rooms.append(new_room)
+            zones.append(new_zone)
 
     # TODO: Having trouble keeping track of scope/assignment!
     stairs = Object(new_x, new_y, '<', 'stairs', libtcod.white, always_visible=True)
