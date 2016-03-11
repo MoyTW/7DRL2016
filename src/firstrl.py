@@ -32,13 +32,6 @@ class Rect(object):
         return self.x1 <= other.x2 and self.x2 >= other.x1 and self.y1 <= other.y2 and self.y2 >= other.y1
 
 
-def create_room(gm, room):
-    for x in range(room.x1 + 1, room.x2):
-        for y in range(room.y1 + 1, room.y2):
-            gm[x][y].blocked = False
-            gm[x][y].block_sight = False
-
-
 def place_objects(gm, room):
     max_monsters = from_dungeon_level(dungeon_level, [[2, 1], [3, 4], [5, 6]])
     monster_chances = {SCOUT: from_dungeon_level(dungeon_level, SCOUTS_PER_LEVEL),
@@ -135,7 +128,8 @@ def make_game_map():
     gm = [[Tile(False)
            for _ in range(MAP_HEIGHT)]
           for _ in range(MAP_WIDTH)]
-    # Ha the old room gen functions still are carving out. QUALITY CODE!
+
+    # Create border walls to prevent objects running off the map
     for x in range(MAP_WIDTH):
         for y in range(MAP_HEIGHT):
             if x == 0 or x == MAP_WIDTH - 2 or x == MAP_WIDTH - 1\
@@ -144,8 +138,6 @@ def make_game_map():
                 gm[x][y].block_sight = True
 
     rooms = []
-    # You could just use the count of rooms here, couldn't you?
-    num_rooms = 0
 
     for r in range(MAX_ROOMS):
         # Size of room
@@ -164,20 +156,18 @@ def make_game_map():
                 break
 
         if not failed:
-            create_room(gm, new_room)
             (new_x, new_y) = new_room.center()
 
             place_objects(gm, new_room)
 
-            if num_rooms == 0:
+            if len(rooms) == 0:
                 player.x = new_x
                 player.y = new_y
 
             rooms.append(new_room)
-            num_rooms += 1
 
     # TODO: Having trouble keeping track of scope/assignment!
-    stairs = Object(new_x, new_y, '<', 'stairs', libtcod.white, always_visible=True,)
+    stairs = Object(new_x, new_y, '<', 'stairs', libtcod.white, always_visible=True)
     objects.append(stairs)
     stairs.send_to_back(objects)
 
