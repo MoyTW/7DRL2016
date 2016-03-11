@@ -2,7 +2,7 @@ import libtcodpy as libtcod
 import textwrap
 import shelve
 from constants import *  # TODO: Bad programmer!
-import render
+from render import Renderer
 from utils import LinePath, ReversePath
 from entities import Object, is_blocked, Fighter
 from ais import ProjectileAI
@@ -373,8 +373,6 @@ def get_equipped_in_slot(slot):
 
 
 def player_move_or_attack(dx, dy):
-    global fov_recompute
-
     x = player.x + dx
     y = player.y + dy
 
@@ -388,7 +386,7 @@ def player_move_or_attack(dx, dy):
         player.fighter.attack(target)
     else:
         player.move(dx, dy, game_map, objects)
-        fov_recompute = True
+        renderer.fov_recompute = True
 
     closest_enemy = closest_monster(3)
     if closest_enemy:
@@ -577,19 +575,15 @@ def projectile_death(projectile):
 def target_tile(max_range=None):
     """Blocks until keypress or click. If the key is ESCAPE or right-click, exits; otherwise waits for a left-click on
     an in-FOV, in-range tile and returns (x, y) of the tile."""
-    global key, mouse, camera_x, camera_y, fov_recompute  # TODO: Scoping
+    global key  # TODO: Scoping
     while True:
         libtcod.console_flush()
         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
 
-        (camera_x, camera_y, fov_recompute) = render.render_all(fov_recompute=fov_recompute, player=player,
-                                                                objects=objects, fov_map=fov_map, game_map=game_map,
-                                                                con=con, panel=panel, game_msgs=game_msgs,
-                                                                dungeon_level=dungeon_level, mouse=mouse,
-                                                                camera_x=camera_x, camera_y=camera_y,
-                                                                timeframe=player.fighter.speed)
+        renderer.render_all(player=player, objects=objects, game_map=game_map, con=con, panel=panel,
+                            game_msgs=game_msgs, dungeon_level=dungeon_level, mouse=mouse)
 
-        (x, y) = (camera_x + mouse.cx, camera_y + mouse.cy)
+        (x, y) = (renderer.camera_x + mouse.cx, renderer.camera_y + mouse.cy)
 
         if mouse.rbutton_pressed or key.vk == libtcod.KEY_ESCAPE:
             return None, None
@@ -762,7 +756,7 @@ def message(new_msg, color=libtcod.white):
 
 def clear_objects():
     for o in objects:
-        o.clear(con, camera_x, camera_y)
+        o.clear(con, renderer.camera_x, renderer.camera_y)
 
 
 # =================================================== MAIN LOOP ==================================================
@@ -812,13 +806,14 @@ def next_level():
 
 
 def initialize_fov():
-    global fov_recompute, fov_map
+    global renderer, fov_map
 
-    fov_recompute = True
     fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
     for y in range(MAP_HEIGHT):
         for x in range(MAP_WIDTH):
             libtcod.map_set_properties(fov_map, x, y, not game_map[x][y].block_sight, not game_map[x][y].blocked)
+
+    renderer = Renderer(fov_map, fov_recompute=True)
 
     libtcod.console_clear(con)
 
@@ -833,22 +828,18 @@ def time_to_next_event(_objects):
 
 
 def play_game():
-    global camera_x, camera_y, key, mouse, fov_recompute
+    global key, mouse
 
     mouse = libtcod.Mouse()
     key = libtcod.Key()
-    (camera_x, camera_y) = (0, 0)
 
     while not libtcod.console_is_window_closed():
         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
         libtcod.console_set_default_foreground(0, libtcod.white)
 
-        (camera_x, camera_y, fov_recompute) = render.render_all(fov_recompute=fov_recompute, player=player,
-                                                                objects=objects, fov_map=fov_map, game_map=game_map,
-                                                                con=con, panel=panel, game_msgs=game_msgs,
-                                                                dungeon_level=dungeon_level, mouse=mouse,
-                                                                camera_x=camera_x, camera_y=camera_y,
-                                                                timeframe=player.fighter.speed)
+        renderer.render_all(player=player, objects=objects, game_map=game_map, con=con, panel=panel,
+                            game_msgs=game_msgs, dungeon_level=dungeon_level, mouse=mouse)
+
         libtcod.console_flush()
 
         check_level_up()

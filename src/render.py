@@ -157,3 +157,25 @@ def render_all(fov_recompute, player, objects, fov_map, game_map, con, panel, ga
     libtcod.console_blit(panel, 0, 0, SCREEN_WIDTH, PANEL_HEIGHT, 0, 0, PANEL_Y)
 
     return camera_x, camera_y, fov_recompute
+
+
+class Renderer(object):
+    def __init__(self, fov_map, fov_recompute=True, camera_x=0, camera_y=0):
+        self.fov_map = fov_map
+        self.fov_recompute = fov_recompute
+        self.camera_x = camera_x
+        self.camera_y = camera_y
+
+    def force_recompute(self):
+        self.fov_recompute = True
+
+    def render_all(self, player, objects, game_map, con, panel, game_msgs, dungeon_level, mouse):
+        (camera_x, camera_y, fov_recompute) = render_all(fov_recompute=self.fov_recompute, player=player,
+                                                         objects=objects, fov_map=self.fov_map, game_map=game_map,
+                                                         con=con, panel=panel, game_msgs=game_msgs,
+                                                         dungeon_level=dungeon_level, mouse=mouse,
+                                                         camera_x=self.camera_x, camera_y=self.camera_y,
+                                                         timeframe=player.fighter.speed)
+        self.camera_x = camera_x
+        self.camera_y = camera_y
+        self.fov_recompute = fov_recompute
