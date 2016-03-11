@@ -101,8 +101,8 @@ def render_all(fov_recompute, player, objects, fov_map, game_map, con, panel, ga
 
     for o in objects:
         if o != player:
-            o.draw(con)
-    player.draw(con)
+            o.draw(con, fov_map, game_map, camera_x, camera_y)
+    player.draw(con, fov_map, game_map, camera_x, camera_y)
 
     if fov_recompute:
         fov_recompute = False

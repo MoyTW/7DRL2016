@@ -32,11 +32,11 @@ class Rect(object):
         return self.x1 <= other.x2 and self.x2 >= other.x1 and self.y1 <= other.y2 and self.y2 >= other.y1
 
 
-def is_blocked(gm, x, y):
-    if gm[x][y].blocked:
+def is_blocked(x, y, _game_map, _objects):
+    if _game_map[x][y].blocked:
         return True
-    for o in objects:
-        if o.blocks and o.x == x and o.y == y:
+    for obj in _objects:
+        if obj.blocks and obj.x == x and obj.y == y:
             return True
     return False
 
@@ -67,7 +67,7 @@ def place_objects(gm, room):
         x = libtcod.random_get_int(0, room.x1 + 1, room.x2 - 1)
         y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
 
-        if not is_blocked(gm, x, y):
+        if not is_blocked(x, y, gm, objects):
             choice = random_choice(monster_chances)
 
             if choice == SCOUT:
@@ -97,7 +97,7 @@ def place_objects(gm, room):
         x = libtcod.random_get_int(0, room.x1 + 1, room.x2 - 1)
         y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
 
-        if not is_blocked(gm, x, y):
+        if not is_blocked(x, y, gm, objects):
             choice = random_choice(item_chances)
 
             if choice == 'heal':
@@ -129,7 +129,7 @@ def place_objects(gm, room):
         x = libtcod.random_get_int(0, room.x1 + 1, room.x2 - 1)
         y = libtcod.random_get_int(0, room.y1 + 1, room.y2 - 1)
 
-        if not is_blocked(gm, x, y):
+        if not is_blocked(x, y, gm, objects):
             fighter_component = Fighter(hp=1, defense=9999, power=0, xp=0, death_function=projectile_death)
             monster = Object(x, y, '#', 'satellite', libtcod.white, blocks=True, fighter=fighter_component)
             objects.append(monster)
@@ -230,7 +230,6 @@ def from_dungeon_level(_dungeon_level, table):
     return 0
 
 
-# Object is using 'con' as the buffer, which is unbound! Does that...work?
 class Object(object):
     def __init__(self, x, y, char, name, color, blocks=False, always_visible=False, is_projectile=False, fighter=None,
                  ai=None, item=None, equipment=None):
@@ -265,10 +264,10 @@ class Object(object):
             self.item = Item()
             self.item.owner = self
 
-    def move(self, dx, dy):
+    def move(self, dx, dy, game_map, objects):
         new_x = self.x + dx
         new_y = self.y + dy
-        blocked = is_blocked(game_map, new_x, new_y)  # TODO: Scoping!
+        blocked = is_blocked(new_x, new_y, game_map, objects)
         # SCOPING DEAR OH GOD WHY FIX THIS AFTER THE TUTORIAL
         if not blocked:
             self.x += dx
@@ -277,14 +276,14 @@ class Object(object):
 
     # TODO: Pull AI logic out of base Object class!
     # TODO: Take other instead of x/y!
-    def move_towards(self, target_x, target_y):
+    def move_towards(self, target_x, target_y, game_map, objects):
         dx = target_x - self.x
         dy = target_y - self.y
         distance = math.sqrt(dx ** 2 + dy ** 2)
 
         dx = int(round(dx / distance))
         dy = int(round(dy / distance))
-        return self.move(dx, dy)
+        return self.move(dx, dy, game_map, objects)
 
     def distance_to(self, other):
         dx = other.x - self.x
@@ -294,8 +293,7 @@ class Object(object):
     def distance(self, x, y):
         return math.sqrt((x - self.x) ** 2 + (y - self.y) ** 2)
 
-    # TODO: Have draw take the buffer to draw to as a parameter!
-    def draw(self, console):
+    def draw(self, console, fov_map, game_map, camera_x, camera_y):
         if libtcod.map_is_in_fov(fov_map, self.x, self.y) or \
                 (self.always_visible and game_map[self.x][self.y].explored):
             (x, y) = render.to_camera_coordinates(self.x, self.y, camera_x, camera_y)
@@ -304,8 +302,7 @@ class Object(object):
                 libtcod.console_set_default_foreground(console, self.color)
                 libtcod.console_put_char(console, x, y, self.char, libtcod.BKGND_NONE)
 
-    # TODO: Have clear take the buffer to draw to as a parameter!
-    def clear(self, console):
+    def clear(self, console, camera_x, camera_y):
         (x, y) = render.to_camera_coordinates(self.x, self.y, camera_x, camera_y)
         libtcod.console_put_char(console, x, y, ' ', libtcod.BKGND_NONE)
 
@@ -379,7 +376,7 @@ class ScoutMonster(object):
         monster = self.owner
         if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
             if monster.distance_to(player) >= 5:
-                monster.move_towards(player.x, player.y)
+                monster.move_towards(player.x, player.y, game_map, objects)
             elif player.fighter.hp > 0:
                 fire_small_shotgun(caster=monster, target=player, spread=2, pellets=3)
 
@@ -393,7 +390,7 @@ class GunshipMonster(object):
         monster = self.owner
 
         if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
-            monster.move_towards(player.x, player.y)
+            monster.move_towards(player.x, player.y, game_map, objects)
             if self.current_cooldown == 0:
                 fire_small_shotgun(caster=monster, target=player)
                 self.current_cooldown += self.cooldown
@@ -412,7 +409,7 @@ class PointDefenseDestroyerMonster(object):
         monster = self.owner
 
         if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
-            monster.move_towards(player.x, player.y)
+            monster.move_towards(player.x, player.y, game_map, objects)
             if self.current_cooldown == 0:
                 fire_small_shotgun(caster=monster, target=player, spread=7, pellets=30)
                 fire_small_cannon(caster=monster, target=player)
@@ -432,7 +429,7 @@ class ProjectileAI(object):
         monster = self.owner
 
         (next_x, next_y) = self.path.step()
-        blocked = monster.move_towards(next_x, next_y)
+        blocked = monster.move_towards(next_x, next_y, game_map, objects)
 
         if blocked:
             for obj in objects:  # TODO: Ugh this is still gnarly
@@ -449,7 +446,7 @@ class ConfusedMonster(object):
 
     def take_turn(self):
         if self.num_turns > 0:
-            self.owner.move(libtcod.random_get_int(0, -1, 1), libtcod.random_get_int(0, -1, 1))
+            self.owner.move(libtcod.random_get_int(0, -1, 1), libtcod.random_get_int(0, -1, 1), game_map, objects)
             self.num_turns -= 1
         else:
             self.owner.ai = self.old_ai
@@ -560,7 +557,7 @@ def player_move_or_attack(dx, dy):
     if target is not None:
         player.fighter.attack(target)
     else:
-        player.move(dx, dy)
+        player.move(dx, dy, game_map, objects)
         fov_recompute = True
 
     closest_enemy = closest_monster(3)
@@ -930,7 +927,7 @@ def message(new_msg, color=libtcod.white):
 
 def clear_objects():
     for o in objects:
-        o.clear(con)
+        o.clear(con, camera_x, camera_y)
 
 
 # =================================================== MAIN LOOP ==================================================
