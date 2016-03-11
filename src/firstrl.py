@@ -4,7 +4,7 @@ import shelve
 from constants import *  # TODO: Bad programmer!
 import render
 from utils import LinePath, ReversePath
-from entities import Object, is_blocked
+from entities import Object, is_blocked, Fighter
 
 
 class Tile(object):
@@ -71,19 +71,19 @@ def place_objects(gm, zone):
             choice = random_choice(monster_chances)
 
             if choice == SCOUT:
-                fighter_component = Fighter(hp=10, defense=0, power=0, xp=30, base_speed=75,
+                fighter_component = Fighter(player=player, hp=10, defense=0, power=0, xp=30, base_speed=75,
                                             death_function=projectile_death)
                 ai_component = ScoutMonster()
                 monster = Object(x, y, 'S', SCOUT, libtcod.darker_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
             elif choice == GUNSHIP:
-                fighter_component = Fighter(hp=50, defense=4, power=3, xp=100, base_speed=200,
+                fighter_component = Fighter(player=player, hp=50, defense=4, power=3, xp=100, base_speed=200,
                                             death_function=monster_death)
                 ai_component = GunshipMonster()
                 monster = Object(x, y, 'G', GUNSHIP, libtcod.darker_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
             elif choice == POINT_DEFENSE_DESTROYER:
-                fighter_component = Fighter(hp=200, defense=10, power=0, xp=500, base_speed=300,
+                fighter_component = Fighter(player=player, hp=200, defense=10, power=0, xp=500, base_speed=300,
                                             death_function=monster_death)
                 ai_component = PointDefenseDestroyerMonster()
                 monster = Object(x, y, 'P', POINT_DEFENSE_DESTROYER, libtcod.darker_green, blocks=True,
@@ -132,7 +132,7 @@ def place_objects(gm, zone):
         y = libtcod.random_get_int(0, zone.y1 + 1, zone.y2 - 1)
 
         if not is_blocked(x, y, gm, objects):
-            fighter_component = Fighter(hp=1, defense=9999, power=0, xp=0, death_function=projectile_death)
+            fighter_component = Fighter(player=player, hp=1, defense=9999, power=0, xp=0, death_function=projectile_death)
             monster = Object(x, y, '#', 'satellite', libtcod.white, blocks=True, fighter=fighter_component)
             objects.append(monster)
 
@@ -228,66 +228,6 @@ def from_dungeon_level(_dungeon_level, table):
         if _dungeon_level >= level:
             return value
     return 0
-
-
-class Fighter(object):
-    def __init__(self, hp, defense, power, xp, base_speed=100, death_function=None):
-        self.base_max_hp = hp
-        self.hp = hp
-        self.base_defense = defense
-        self.base_power = power
-        self.xp = xp
-        self.base_speed = base_speed
-        self.time_until_turn = self.speed
-        self.death_function = death_function
-
-    @property
-    def max_hp(self):
-        bonus = sum(equipment.max_hp_bonus for equipment in get_all_equipped(self.owner))
-        return self.base_max_hp + bonus
-
-    @property
-    def defense(self):
-        bonus = sum(equipment.defense_bonus for equipment in get_all_equipped(self.owner))
-        return self.base_defense + bonus
-
-    @property
-    def power(self):
-        bonus = sum(equipment.power_bonus for equipment in get_all_equipped(self.owner))
-        return self.base_power + bonus
-
-    # TODO: Speed-altering equipment?
-    @property
-    def speed(self):
-        return self.base_speed
-
-    def end_turn(self):
-        self.time_until_turn = self.speed
-
-    def attack(self, target):
-        damage = self.power - target.fighter.defense
-        if damage > 0:
-            message(self.owner.name.capitalize() + ' attacks ' + target.name + ' for ' + str(damage), libtcod.yellow)
-            target.fighter.take_damage(damage)
-        else:
-            message(self.owner.name.capitalize() + ' attacks ' + target.name + ' but it does no damage', libtcod.green)
-
-    def take_damage(self, damage):
-        if damage > 0:
-            self.hp -= damage
-
-        if self.hp <= 0:
-            function = self.death_function
-            if function is not None:
-                function(self.owner)
-                # TODO: Don't overload xp to be both how much you have and how much you're worth!
-                if self.owner != player:
-                    player.fighter.xp += self.xp
-
-    def heal(self, amount):
-        self.hp += amount
-        if self.hp > self.max_hp:
-            self.hp = self.max_hp
 
 
 class ScoutMonster(object):
@@ -448,17 +388,6 @@ def get_equipped_in_slot(slot):
         if obj.equipment and obj.equipment.slot == slot and obj.equipment.is_equipped:
             return obj.equipment
     return None
-
-
-def get_all_equipped(obj):
-    if obj == player:
-        equipped_list = []
-        for item in inventory:
-            if item.equipment and item.equipment.is_equipped:
-                equipped_list.append(item.equipment)
-        return equipped_list
-    else:
-        return []
 
 
 def player_move_or_attack(dx, dy):
@@ -763,7 +692,7 @@ def cast_confuse():
 
 
 def cast_throw_boomerang(caster, target):
-    fighter_component = Fighter(hp=1, defense=0, power=5, xp=0, base_speed=33, death_function=projectile_death)
+    fighter_component = Fighter(player=player, hp=1, defense=0, power=5, xp=0, base_speed=33, death_function=projectile_death)
     path = ReversePath(caster.x, caster.y, target.x, target.y)
     ai_component = ProjectileAI(path, objects)
     projectile = Object(caster.x, caster.y, 'B', 'boomerang', libtcod.red, blocks=False, fighter=fighter_component,
@@ -773,7 +702,7 @@ def cast_throw_boomerang(caster, target):
 
 
 def single_small_shotgun(source_x, source_y, target_x, target_y):
-    fighter_component = Fighter(hp=1, defense=0, power=1, xp=0, base_speed=25, death_function=projectile_death)
+    fighter_component = Fighter(player=player, hp=1, defense=0, power=1, xp=0, base_speed=25, death_function=projectile_death)
     path = LinePath(source_x, source_y, target_x, target_y)
     ai_component = ProjectileAI(path, objects)
     projectile = Object(source_x, source_y, 's', 'small shotgun shell', libtcod.red, blocks=False, is_projectile=True,
@@ -790,7 +719,7 @@ def fire_small_shotgun(caster, target, spread=5, pellets=5):
 
 
 def fire_small_cannon(caster, target):
-    fighter_component = Fighter(hp=1, defense=0, power=5, xp=0, base_speed=50, death_function=projectile_death)
+    fighter_component = Fighter(player=player, hp=1, defense=0, power=5, xp=0, base_speed=50, death_function=projectile_death)
     path = LinePath(caster.x, caster.y, target.x, target.y)
     ai_component = ProjectileAI(path, objects)
     projectile = Object(caster.x, caster.y, 'c', 'small cannon shell', libtcod.red, blocks=False, is_projectile=True,
@@ -800,7 +729,7 @@ def fire_small_cannon(caster, target):
 
 
 def fire_cutting_laser(caster, target):
-    fighter_component = Fighter(hp=1, defense=0, power=25, xp=0, base_speed=1, death_function=projectile_death)
+    fighter_component = Fighter(player=player, hp=1, defense=0, power=25, xp=0, base_speed=1, death_function=projectile_death)
     path = LinePath(caster.x, caster.y, target.x, target.y)
     ai_component = ProjectileAI(path, objects)
     projectile = Object(caster.x, caster.y, '*', 'cutting laser beam', libtcod.red, blocks=False, is_projectile=True,
@@ -858,8 +787,17 @@ def clear_objects():
 def new_game():
     global player, inventory, game_msgs, game_state, dungeon_level, game_map
 
-    player_fighter = Fighter(hp=30, defense=0, power=10, xp=0, death_function=player_death)  # TODO: Don't overload xp!
+    game_state = GAME_STATE_PLAYING
+    inventory = []
+
+    # TODO: Don't overload xp!
+    # TODO: Hahaha that's a terrible kludge here, creating the fighter and then setting the player to it later!
+    # TODO: Seriously this is terrible and The Worst. If you have time fix it please.
+    # Though to be fair it is a 7-day thing so you...probably won't, as much as it hurts to admit it.
+    player_fighter = Fighter(player=None, hp=30, defense=0, power=10, xp=0, death_function=player_death,
+                             inventory=inventory)
     player = Object(0, 0, '@', 'player', libtcod.white, blocks=True, fighter=player_fighter)
+    player.fighter.player = player
 
     # TODO: Don't just add random properties that's silly.
     player.level = 1
@@ -867,9 +805,6 @@ def new_game():
     dungeon_level = 1
     game_map = make_game_map()
     initialize_fov()
-
-    game_state = GAME_STATE_PLAYING
-    inventory = []
 
     game_msgs = []
     message('Initial Message')
