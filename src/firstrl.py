@@ -48,18 +48,6 @@ def create_room(gm, room):
             gm[x][y].block_sight = False
 
 
-def create_h_tunnel(gm, x1, x2, y):
-    for x in range(min(x1, x2), max(x1, x2) + 1):
-        gm[x][y].blocked = False
-        gm[x][y].block_sight = False
-
-
-def create_v_tunnel(gm, y1, y2, x):
-    for y in range(min(y1, y2), max(y1, y2) + 1):
-        gm[x][y].blocked = False
-        gm[x][y].block_sight = False
-
-
 def place_objects(gm, room):
     max_monsters = from_dungeon_level(dungeon_level, [[2, 1], [3, 4], [5, 6]])
     monster_chances = {SCOUT: from_dungeon_level(dungeon_level, SCOUTS_PER_LEVEL),
@@ -147,7 +135,6 @@ def place_objects(gm, room):
             objects.append(monster)
 
 
-
 def make_game_map():
     # OH GOD! WHAT IS SCOPE EVEN
     global objects, stairs
@@ -194,16 +181,6 @@ def make_game_map():
             if num_rooms == 0:
                 player.x = new_x
                 player.y = new_y
-            else:
-                # Connect to the last room in the room vector
-                (prev_x, prev_y) = rooms[num_rooms - 1].center()
-
-                if libtcod.random_get_int(0, 0, 1):
-                    create_h_tunnel(gm, prev_x, new_x, prev_y)
-                    create_v_tunnel(gm, prev_y, new_y, new_x)
-                else:
-                    create_v_tunnel(gm, prev_y, new_y, new_x)
-                    create_h_tunnel(gm, prev_x, new_x, prev_y)
 
             rooms.append(new_room)
             num_rooms += 1
