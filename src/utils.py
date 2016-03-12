@@ -55,3 +55,13 @@ def calculate_circle(x, y, distance):
             if distance == _distance:
                 tiles.append([_x, _y])
     return tiles
+
+
+def enemies_in_range(player, objects, max_range):
+    enemies = []
+
+    for obj in objects:
+        if obj.fighter and obj.ai and not obj.is_projectile and not obj == player:
+            dist = player.distance_to(obj)
+            if dist <= max_range:
+                enemies.append(obj)
