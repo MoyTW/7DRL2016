@@ -89,8 +89,8 @@ def draw_paths(con, fov_map, game_map, camera_x, camera_y, objects, timeframe):
             for (x, y) in path.project(moves_in_timeframe):
                 if continue_draw:
                     continue_draw = color_square_danger(con, fov_map, game_map, x, y, camera_x, camera_y)
-                else:
-                    break
+                    if game_map[x][y].blocked:
+                        continue_draw = False
 
 
 def render_all(fov_recompute, player, objects, fov_map, game_map, con, panel, game_msgs, dungeon_level,

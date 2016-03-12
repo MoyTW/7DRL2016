@@ -93,6 +93,8 @@ def place_objects(gm, zone):
             fighter_component = Fighter(player=player, hp=1, defense=9999, power=0, xp=0, death_function=projectile_death)
             monster = Object(x, y, '#', 'satellite', libtcod.white, blocks=True, fighter=fighter_component)
             objects.append(monster)
+            # TODO: Hack!
+            gm[x][y].blocked = True
 
 
 def make_game_map():
