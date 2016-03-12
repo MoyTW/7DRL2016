@@ -46,6 +46,12 @@ def place_objects(gm, zone, safe=False):
                 ai_component = GunshipMonster()
                 monster = Object(x, y, 'G', GUNSHIP, libtcod.darker_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
+            elif choice == FRIGATE:
+                fighter_component = Fighter(player=player, hp=150, defense=10, power=3, xp=100, base_speed=200,
+                                            death_function=monster_death)
+                ai_component = FrigateMonster()
+                monster = Object(x, y, 'R', FRIGATE, libtcod.darker_green, blocks=True, fighter=fighter_component,
+                                 ai=ai_component)
             elif choice == POINT_DEFENSE_DESTROYER:
                 fighter_component = Fighter(player=player, hp=200, defense=10, power=0, xp=500, base_speed=300,
                                             death_function=monster_death)
@@ -230,6 +236,27 @@ class GunshipMonster(object):
         if self.current_cooldown > 0:
             self.current_cooldown -= 1
 
+
+class FrigateMonster(object):
+    def __init__(self):
+        self.reverse_cooldown = 3
+        self.current_reverse_cooldown = 0
+
+    def take_turn(self):
+        monster = self.owner
+
+        if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
+            monster.move_towards(player.x, player.y, game_map, objects)
+            if self.current_reverse_cooldown == 0:
+                fire_returning_shot(caster=monster, target=player)
+                fire_small_cannon(caster=monster, target=player)
+                self.current_reverse_cooldown += self.reverse_cooldown
+            else:
+                fire_small_cannon(caster=monster, target=player)
+                fire_small_gatling(caster=monster, target=player)
+                fire_small_shotgun(caster=monster, target=player, pellets=2, spread=3)
+        if self.current_reverse_cooldown > 0:
+            self.current_reverse_cooldown -= 1
 
 class PointDefenseDestroyerMonster(object):
     def __init__(self):
@@ -642,13 +669,13 @@ def cast_confuse():
     message('Confused ' + monster.name + '!', libtcod.light_blue)
 
 
-def cast_throw_boomerang(caster, target):
-    fighter_component = Fighter(player=player, hp=1, defense=0, power=5, xp=0, base_speed=33,
+def fire_returning_shot(caster, target):
+    fighter_component = Fighter(player=player, hp=1, defense=0, power=2, xp=0, base_speed=33,
                                 death_function=projectile_death)
     path = ReversePath(caster.x, caster.y, target.x, target.y)
     ai_component = ProjectileAI(path, game_map, objects)
-    projectile = Object(caster.x, caster.y, 'B', 'boomerang', libtcod.red, blocks=False, fighter=fighter_component,
-                        ai=ai_component)
+    projectile = Object(caster.x, caster.y, 'r', 'reverser shot', libtcod.red, blocks=False, is_projectile=True,
+                        fighter=fighter_component, ai=ai_component)
     objects.append(projectile)
     projectile.send_to_back(objects)
 

@@ -63,4 +63,5 @@ POINT_DEFENSE_DESTROYERS_PER_LEVEL = [[10, 2], [30, 3]]
 SCOUT = 'scout'
 FIGHTER = 'fighter'
 GUNSHIP = 'gunship'
+FRIGATE = 'frigate'
 POINT_DEFENSE_DESTROYER = 'point defense destroyer'
