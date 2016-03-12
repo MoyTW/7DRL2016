@@ -501,7 +501,7 @@ def player_move(dx, dy):
     player.move(dx, dy, game_map, objects)
     renderer.fov_recompute = True
 
-    closest_enemy = closest_monster(3)
+    closest_enemy = closest_monster(CUTTING_LASER_RANGE)
     if closest_enemy:
         fire_cutting_laser(player, closest_enemy)
 
