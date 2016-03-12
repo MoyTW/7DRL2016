@@ -957,6 +957,8 @@ def play_game():
     mouse = libtcod.Mouse()
     key = libtcod.Key()
 
+    tutorial = True
+
     while not libtcod.console_is_window_closed():
         if game_state == GAME_STATE_VICTORY:
             break
@@ -972,6 +974,26 @@ def play_game():
         check_level_up()
 
         renderer.clear_objects(con, objects)
+
+        if tutorial:
+            msgbox("Welcome to the game!\n\n"
+                   "You're tasked with a very important mission! The most talented diplomat the Earthlings have is "
+                   "travelling to Epsilon Gruis I, where he'll attend peace talks with The Safe Ones and possibly gain "
+                   "their support! Obviously this cannot happen, so you must ASSASSINATE THE DIPLOMAT!\n\n"
+                   "To reach the diplomat, you must navigate through nine sectors (all crawling with hostiles by the "
+                   "way) by using the naturally occurring JUMP POINTS. Out spies have provided INTEL pickups on the way"
+                   " that will give you the disposition of the enemy forces in the next sector. If you don't pick up "
+                   "the INTEL you'll be flying blind and probably die!\n\n"
+                   "Your ship is equipped with a 3-tile cutting laser. End your turn within a distance of 3 to an enemy"
+                   " to attack. It's pretty powerful against small ships, but be wary of extended engagements.\n\n"
+                   "Good luck captain!\n\n"
+                   "CONTROLS:\n"
+                   "KEYPAD: Movement\n"
+                   "g: pick up an item in your tile\n"
+                   "r: view sector reports (DO THIS)\n"
+                   "<: jump to the next sector (must be on the jump point)\n",
+                   70)
+            tutorial = False
 
         # TODO: Kind of messy way of structuring this!
         time = time_to_next_event(objects)
@@ -1003,9 +1025,10 @@ def main_menu():
         libtcod.image_blit_2x(img, 0, 0, 0)
 
         # title and credits
-        libtcod.console_set_default_foreground(0, libtcod.red)
-        libtcod.console_print_ex(0, SCREEN_WIDTH/2, SCREEN_HEIGHT/2-4, libtcod.BKGND_NONE, libtcod.CENTER, 'TEST GAME')
-        libtcod.console_print_ex(0, SCREEN_WIDTH/2, SCREEN_HEIGHT/2-3, libtcod.BKGND_NONE, libtcod.CENTER, 'by MoyTW')
+        libtcod.console_set_default_foreground(0, libtcod.white)
+        libtcod.console_print_ex(0, SCREEN_WIDTH/2, SCREEN_HEIGHT/2-4, libtcod.BKGND_DARKEN, libtcod.CENTER,
+                                 'A Roguelike Where You Dodge Projectiles')
+        libtcod.console_print_ex(0, SCREEN_WIDTH/2, SCREEN_HEIGHT/2-3, libtcod.BKGND_DARKEN, libtcod.CENTER, 'by MoyTW')
 
         # menu + choice
         choice = menu('', ['New game', 'Quit'], 24)
@@ -1019,7 +1042,7 @@ def main_menu():
 libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
 
 # Initialize windows/buffers
-libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'tutorial roguelike! whooo!', False)
+libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'A Roguelike Where You Dodge Projectiles', False)
 con = libtcod.console_new(MAP_WIDTH, MAP_HEIGHT)
 panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
 
