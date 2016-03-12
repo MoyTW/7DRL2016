@@ -218,8 +218,8 @@ def make_game_map():
 
 
 class MonsterAI(object):
-    def __init__(self):
-        self.activated = False
+    def __init__(self, activated=False):
+        self.activated = activated
         self.owner = None
 
     def is_activated(self):
@@ -236,8 +236,8 @@ class MonsterAI(object):
 
 
 class ScoutMonster(MonsterAI):
-    def __init__(self):
-        super(ScoutMonster, self).__init__()
+    def __init__(self, activated=False):
+        super(ScoutMonster, self).__init__(activated=activated)
 
     def take_turn(self):
         if self.is_activated():
@@ -248,8 +248,8 @@ class ScoutMonster(MonsterAI):
 
 
 class FighterMonster(MonsterAI):
-    def __init__(self):
-        super(FighterMonster, self).__init__()
+    def __init__(self, activated=False):
+        super(FighterMonster, self).__init__(activated=activated)
 
     def take_turn(self):
         if self.is_activated():
@@ -372,15 +372,15 @@ class CarrierMonster(MonsterAI):
             if choice == SCOUT:
                 fighter_component = Fighter(player=player, hp=10, defense=0, power=0, xp=30, base_speed=75,
                                             death_function=projectile_death)
-                ai_component = ScoutMonster()
+                ai_component = ScoutMonster(activated=True)
                 self.owner = Object(x, y, 'S', SCOUT, libtcod.darker_green, blocks=True, fighter=fighter_component,
                                     ai=ai_component)
             elif choice == FIGHTER:
                 fighter_component = Fighter(player=player, hp=30, defense=0, power=0, xp=50, base_speed=125,
                                             death_function=projectile_death)
-                ai_component = FighterMonster()
+                ai_component = FighterMonster(activated=True)
                 self.owner = Object(x, y, 'F', FIGHTER, libtcod.darker_green, blocks=True,
-                                 fighter=fighter_component, ai=ai_component)
+                                    fighter=fighter_component, ai=ai_component)
             objects.append(self.owner)
 
             # If the player is too close, flak burst
