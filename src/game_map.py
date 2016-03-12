@@ -21,17 +21,21 @@ class Zone(object):
         self._items = []
 
         self._finalized = False
-        self.summary = self._build_summary()
+        self.summary = self._build_summary(False)
 
-    def _build_summary(self):
+    def _build_summary(self, has_intel):
         (x, y) = self.center()
         top_line = self.name + ': (' + str(x) + ',' + str(y) + ')'
 
-        item_names = map(lambda i: i.name, self._items)
-        item_line = 'Items: ' + ','.join(item_names)
+        if has_intel:
+            item_names = map(lambda i: i.name, self._items)
+            item_line = 'Items: ' + ','.join(item_names)
 
-        enemy_names = map(lambda e: e.name, self._enemies)
-        enemy_line = 'Enemies: ' + ','.join(enemy_names)
+            enemy_names = map(lambda e: e.name, self._enemies)
+            enemy_line = 'Enemies: ' + ','.join(enemy_names)
+        else:
+            item_line = 'Items: UNKNOWN'
+            enemy_line = 'Enemies: UNKNOWN'
 
         return top_line + '\n' + enemy_line + '\n' + item_line + '\n'
 
@@ -53,9 +57,9 @@ class Zone(object):
         else:
             raise ValueError('Attempted to register item with finalized Zone')
 
-    def finalize(self):
+    def finalize(self, has_intel):
         if not self._finalized:
-            self.summary = self._build_summary()
+            self.summary = self._build_summary(has_intel)
             self._finalized = True
             self._enemies = None
             self._items = None
