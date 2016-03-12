@@ -30,13 +30,13 @@ def place_objects(gm, zone, safe=False):
         if not is_blocked(x, y, gm, objects):
             if choice == SCOUT:
                 fighter_component = Fighter(player=player, hp=10, defense=0, power=0, xp=30, base_speed=75,
-                                            death_function=projectile_death)
+                                            death_function=monster_death)
                 ai_component = ScoutMonster()
                 monster = Object(x, y, 'S', SCOUT, libtcod.darker_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
             elif choice == FIGHTER:
                 fighter_component = Fighter(player=player, hp=30, defense=0, power=0, xp=50, base_speed=125,
-                                            death_function=projectile_death)
+                                            death_function=monster_death)
                 ai_component = FighterMonster()
                 monster = Object(x, y, 'F', FIGHTER, libtcod.darker_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
@@ -47,7 +47,7 @@ def place_objects(gm, zone, safe=False):
                 monster = Object(x, y, 'G', GUNSHIP, libtcod.darker_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
             elif choice == FRIGATE:
-                fighter_component = Fighter(player=player, hp=150, defense=10, power=3, xp=100, base_speed=250,
+                fighter_component = Fighter(player=player, hp=150, defense=10, power=3, xp=200, base_speed=250,
                                             death_function=monster_death)
                 ai_component = FrigateMonster()
                 monster = Object(x, y, 'R', FRIGATE, libtcod.darker_green, blocks=True, fighter=fighter_component,
