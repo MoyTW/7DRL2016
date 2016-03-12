@@ -152,17 +152,25 @@ def make_game_map():
     # Generate the intel
     # TODO: This is an awkward formulation!
     intel_zone = zones[libtcod.random_get_int(0, 1, len(zones) - 1)]
+
     (intel_x, intel_y) = intel_zone.random_coordinates()
     while is_blocked(intel_x, intel_y, gm, objects):
         (intel_x, intel_y) = intel_zone.random_coordinates()
-    intel = Object(intel_x, intel_y, 'I', 'intel', libtcod.light_violet, always_visible=True, item=Item())
+
+    # Intel gives you vision of the next level
+    def use_fn():
+        zone_intel[dungeon_level + 1] = True
+        message('Intel for zones in Sector ' + str(dungeon_level + 1) + ' loaded!', libtcod.light_violet)
+
+    intel = Object(intel_x, intel_y, 'I', 'intel', libtcod.light_violet, always_visible=True,
+                   item=Item(auto_use=True, use_function=use_fn))
     intel_zone.register_item(intel)
     objects.append(intel)
     intel.send_to_back(objects)
 
     # Make Zones read-only (well not really, but the summaries become read-only)
     for zone in zones:
-        zone.finalize(True)
+        zone.finalize(zone_intel.get(dungeon_level, False))
 
     return gm
 
@@ -268,18 +276,22 @@ class ConfusedMonster(object):
 
 
 class Item(object):
-    def __init__(self, use_function=None):
+    def __init__(self, use_function=None, auto_use=False):
         self.use_function = use_function
+        self.auto_use = auto_use
 
     def pick_up(self):
-        if len(inventory) >= 26:
+        if self.auto_use:
+            inventory.append(self.owner)
+            objects.remove(self.owner)
+            self.use()
+        elif len(inventory) >= 26:
             message('Your inventory is full! Cannot pick up ' + self.owner.name + '', libtcod.red)
         else:
             inventory.append(self.owner)
             objects.remove(self.owner)
             message('You picked up a ' + self.owner.name + '!', libtcod.green)
 
-            # Auto-equip picked-up items
             equipment = self.owner.equipment
             if equipment and get_equipped_in_slot(equipment.slot) is None:
                 equipment.equip()
@@ -688,31 +700,33 @@ def fire_cutting_laser(caster, target):
 
 
 def save_game():
-    save_file = shelve.open('save_game', 'n')
-    save_file['game_map'] = game_map
-    save_file['objects'] = objects
-    save_file['player_index'] = objects.index(player)
-    save_file['inventory'] = inventory
-    save_file['game_msgs'] = game_msgs
-    save_file['game_state'] = game_state
-    save_file['stairs_index'] = objects.index(stairs)
-    save_file['dungeon_level'] = dungeon_level
-    save_file.close()
+    pass
+#    save_file = shelve.open('save_game', 'n')
+#    save_file['game_map'] = game_map
+#    save_file['objects'] = objects
+#    save_file['player_index'] = objects.index(player)
+#    save_file['inventory'] = inventory
+#    save_file['game_msgs'] = game_msgs
+#    save_file['game_state'] = game_state
+#    save_file['stairs_index'] = objects.index(stairs)
+#    save_file['dungeon_level'] = dungeon_level
+#    save_file.close()
 
 
 def load_game():
-    global game_map, objects, player, inventory, game_msgs, game_state, stairs, dungeon_level
-
-    save_file = shelve.open('save_game', 'r')
-    game_map = save_file['game_map']
-    objects = save_file['objects']
-    player = objects[save_file['player_index']]
-    inventory = save_file['inventory']
-    game_msgs = save_file['game_msgs']
-    game_state = save_file['game_state']
-    stairs = objects[save_file['stairs_index']]
-    dungeon_level = save_file['dungeon_level']
-    save_file.close()
+    pass
+#    global game_map, objects, player, inventory, game_msgs, game_state, stairs, dungeon_level
+#
+#    save_file = shelve.open('save_game', 'r')
+#    game_map = save_file['game_map']
+#    objects = save_file['objects']
+#    player = objects[save_file['player_index']]
+#    inventory = save_file['inventory']
+#    game_msgs = save_file['game_msgs']
+#    game_state = save_file['game_state']
+#    stairs = objects[save_file['stairs_index']]
+#    dungeon_level = save_file['dungeon_level']
+#    save_file.close()
 
     initialize_fov()
 
@@ -729,10 +743,11 @@ def message(new_msg, color=libtcod.white):
 
 # =================================================== MAIN LOOP ==================================================
 def new_game():
-    global player, inventory, game_msgs, game_state, dungeon_level, game_map
+    global player, inventory, zone_intel, game_msgs, game_state, dungeon_level, game_map
 
     game_state = GAME_STATE_PLAYING
     inventory = []
+    zone_intel = {1: True}
 
     # TODO: Don't overload xp!
     # TODO: Hahaha that's a terrible kludge here, creating the fighter and then setting the player to it later!
