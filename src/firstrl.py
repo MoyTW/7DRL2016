@@ -639,8 +639,8 @@ def check_level_up():
         while choice is None:
             choice = menu('Level up! Choose a stat to raise:\n',
                           ['HP + 20, (from ' + str(player.fighter.base_max_hp) + ')',
-                           'STR + 1, (from ' + str(player.fighter.base_power) + ')',
-                           'DEF + 1, (from ' + str(player.fighter.base_defense) + ')'],
+                           'POWER + 5, (from ' + str(player.fighter.base_power) + ')',
+                           'DEFENSE + 1, (from ' + str(player.fighter.base_defense) + ')'],
                           LEVEL_SCREEN_WIDTH)
         if choice == 0:
             player.fighter.base_max_hp += 20
