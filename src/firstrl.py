@@ -934,7 +934,7 @@ def play_game():
                    "travelling to Epsilon Gruis I, where he'll attend peace talks with The Safe Ones and possibly gain "
                    "their support! Obviously this cannot happen, so you must ASSASSINATE THE DIPLOMAT!\n\n"
                    "To reach the diplomat, you must navigate through nine sectors (all crawling with hostiles by the "
-                   "way) by using the naturally occurring JUMP POINTS. Out spies have provided INTEL pickups on the way"
+                   "way) by using the naturally occurring JUMP POINTS. Our spies have provided INTEL pickups on the way"
                    " that will give you the disposition of the enemy forces in the next sector. If you don't pick up "
                    "the INTEL you'll be flying blind and probably die!\n\n"
                    "Your ship is equipped with a 3-tile cutting laser. End your turn within a distance of 3 to an enemy"
