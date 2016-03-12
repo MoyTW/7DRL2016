@@ -65,3 +65,4 @@ def enemies_in_range(player, objects, max_range):
             dist = player.distance_to(obj)
             if dist <= max_range:
                 enemies.append(obj)
+    return enemies

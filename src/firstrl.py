@@ -12,11 +12,6 @@ import tables
 
 
 def place_objects(gm, zone, safe=False):
-    max_items = utils.from_dungeon_level(dungeon_level, [[2, 1], [3, 4]])
-    item_chances = {'heal': 35,
-                    'lightning': utils.from_dungeon_level(dungeon_level, [[15, 1], [30, 3], [45, 5]]),
-                    'confuse': utils.from_dungeon_level(dungeon_level, [[5, 3], [25, 6]])}  # TODO: Enum?
-
     if not safe:
         enemies = tables.choose_encounter_for_level(dungeon_level)
     else:
@@ -78,25 +73,34 @@ def place_objects(gm, zone, safe=False):
             zone.register_enemy(monster)
             objects.append(monster)
 
+    max_items = utils.from_dungeon_level(dungeon_level, [[2, 1], [3, 4]])
+    item_chances = {ITEM_DUCT_TAPE: 45,
+                    ITEM_EXTRA_BATTERY: 25,
+                    ITEM_RED_PAINT: 10,
+                    ITEM_EMP: 10}
+
     # Place items
-    num_items = 0 # libtcod.random_get_int(0, 0, max_items)
+    num_items = 5  # libtcod.random_get_int(0, 0, max_items)
     for _ in range(num_items):
         (x, y) = zone.random_coordinates()
 
         if not is_blocked(x, y, gm, objects):
             choice = utils.random_choice(item_chances)
 
-            if choice == 'heal':
-                item_component = Item(use_function=cast_heal)
-                item = Object(x, y, '!', 'healing potion', libtcod.violet, always_visible=True, item=item_component)
-            elif choice == 'lightning':
-                item_component = Item(use_function=cast_lightning)
-                item = Object(x, y, '#', 'scroll of lightning bolt', libtcod.light_yellow, always_visible=True,
+            if choice == ITEM_DUCT_TAPE:
+                item_component = Item(use_function=use_repair_player)
+                item = Object(x, y, 't', ITEM_DUCT_TAPE, libtcod.violet, always_visible=True, item=item_component)
+            elif choice == ITEM_EXTRA_BATTERY:
+                item_component = Item(use_function=boost_player_power)
+                item = Object(x, y, 'b', ITEM_EXTRA_BATTERY, libtcod.light_yellow, always_visible=True,
                               item=item_component)
-            elif choice == 'confuse':
-                item_component = Item(use_function=cast_confuse)
-                item = Object(x, y, '#', 'scroll of confuse', libtcod.light_blue, always_visible=True,
+            elif choice == ITEM_EMP:
+                item_component = Item(use_function=cast_area_disable)
+                item = Object(x, y, 'p', ITEM_EMP, libtcod.light_blue, always_visible=True,
                               item=item_component)
+            elif choice == ITEM_RED_PAINT:
+                item = Object(x, y, 'r', ITEM_RED_PAINT, libtcod.light_red, always_visible=True,
+                              item=Item(use_function=boost_player_speed))
 
             objects.append(item)
             zone.register_item(item)
@@ -388,18 +392,17 @@ class DiplomatMonster(object):
             message('Please do not attack! We are a peaceful diplomatic vessel!', libtcod.light_violet)
 
 
-class ConfusedMonster(object):
-    def __init__(self, old_ai, num_turns=CONFUSE_NUM_TURNS):
+class DisabledMonster(object):
+    def __init__(self, old_ai, num_turns=AREA_DISABLE_TURNS):
         self.old_ai = old_ai
         self.num_turns = num_turns
 
     def take_turn(self):
         if self.num_turns > 0:
-            self.owner.move(libtcod.random_get_int(0, -1, 1), libtcod.random_get_int(0, -1, 1), game_map, objects)
             self.num_turns -= 1
         else:
             self.owner.ai = self.old_ai
-            message('The ' + self.owner.name + ' is no longer confused!', libtcod.red)
+            message('The ' + self.owner.name + ' has managed to restore power!', libtcod.red)
 
 
 class Item(object):
@@ -709,14 +712,13 @@ def target_monster(max_range=None):
                 return obj
 
 
-# TODO: Generalize to target
-def cast_heal():
+def use_repair_player():
     if player.fighter.hp == player.fighter.max_hp:
         message('You are already at full health!', libtcod.red)
         return 'cancelled'  # TODO: const not str
 
-    message('You are healed for ' + str(HEAL_AMOUNT) + '!', libtcod.light_violet)
-    player.fighter.heal(HEAL_AMOUNT)
+    message('You are repaired for ' + str(REPAIR_AMOUNT) + '!', libtcod.light_violet)
+    player.fighter.heal(REPAIR_AMOUNT)
 
 
 def closest_monster(max_range):
@@ -736,20 +738,27 @@ def closest_monster(max_range):
 
 def boost_player_power():
     player.fighter.apply_power_buff(20, 450)
-    message('You supercharge your laser! Power +20 for 450 TUs!')
+    message('You supercharge your laser! Power +20 for 450 TUs!', libtcod.light_yellow)
 
 
-def cast_confuse():
-    message('Left-click on the confuse target, ESC/right-click to cancel.', libtcod.light_blue)
-    monster = target_monster(CONFUSE_RANGE)
-    if monster is None:
-        message('Confuse cancelled.', libtcod.light_blue)
+def boost_player_speed():
+    if player.fighter.speed < 100:
+        message("You can't make your ride any redder than it already is!")
         return ACTION_CANCELLED
+    else:
+        player.fighter.apply_speed_buff(75, 300)
+        message("You spray red paint on your ride. You'll move (and fire) four times as fast for the next 300 TUs!")
 
-    old_ai = monster.ai
-    monster.ai = ConfusedMonster(old_ai)
-    monster.ai.owner = monster
-    message('Confused ' + monster.name + '!', libtcod.light_blue)
+
+def cast_area_disable():
+    message('Detonated pulse blast! Enemies within a ' + str(AREA_DISABLE_RANGE) + ' tile radius will be disabled!',
+            libtcod.light_blue)
+    enemies = utils.enemies_in_range(player, objects, AREA_DISABLE_RANGE)
+    for enemy in enemies:
+        old_ai = enemy.ai
+        enemy.ai = DisabledMonster(old_ai)
+        enemy.ai.owner = enemy
+        message('The ' + enemy.name + ' was disabled for ' + str(AREA_DISABLE_TURNS) + ' turns !', libtcod.light_blue)
 
 
 def fire_railgun(caster, target):
