@@ -17,7 +17,7 @@ class ProjectileAI(object):
             for obj in self.objects:  # TODO: Ugh this is still gnarly
                 if obj.x == next_x and obj.y == next_y and obj.fighter and obj != monster and not obj.is_projectile:
                     damage = monster.fighter.attack(obj)
-                    if (obj.ai or obj.is_player) and obj.fighter.hp > 0:
+                    if damage > 0 and (obj.ai or obj.is_player) and obj.fighter.hp > 0:
                         self.message_fn('The ' + monster.name + ' hit the ' + obj.name + ' for ' + str(damage) +
                                         ' damage!', libtcod.orange)
                     break
