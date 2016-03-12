@@ -734,15 +734,9 @@ def closest_monster(max_range):
     return closest_enemy
 
 
-def cast_lightning():
-    monster = closest_monster(LIGHTNING_RANGE)
-
-    if monster is None:
-        message('No valid targets for Lightning spell!', libtcod.red)
-        return ACTION_CANCELLED
-
-    message('Lightning used on ' + monster.name + ' for ' + str(LIGHTNING_DAMAGE) + ' damage!', libtcod.light_yellow)
-    monster.fighter.take_damage(LIGHTNING_DAMAGE)
+def boost_player_power():
+    player.fighter.apply_power_buff(20, 450)
+    message('You supercharge your laser! Power +20 for 450 TUs!')
 
 
 def cast_confuse():

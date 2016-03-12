@@ -117,6 +117,7 @@ class Fighter(object):
         self._time_until_turn = self.speed
         self.death_function = death_function
         self.inventory = inventory
+        self._power_buffs = []
 
     @property
     def max_hp(self):
@@ -131,7 +132,8 @@ class Fighter(object):
     @property
     def power(self):
         bonus = sum(equipment.power_bonus for equipment in get_all_equipped(self.owner, self.player, self.inventory))
-        return self.base_power + bonus
+        buffs = sum(buff[0] for buff in self._power_buffs)
+        return self.base_power + bonus + buffs
 
     # TODO: Speed-altering equipment?
     @property
@@ -144,6 +146,10 @@ class Fighter(object):
 
     def pass_time(self, time):
         self._time_until_turn -= time
+        for buff in self._power_buffs:
+            buff[1] -= time
+            if buff[1] <= 0:
+                self._power_buffs.remove(buff)
 
     def end_turn(self):
         self._time_until_turn = self.speed
@@ -170,3 +176,6 @@ class Fighter(object):
         self.hp += amount
         if self.hp > self.max_hp:
             self.hp = self.max_hp
+
+    def apply_power_buff(self, amount, time):
+        self._power_buffs.append([amount, time])
