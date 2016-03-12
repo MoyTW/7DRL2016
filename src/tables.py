@@ -11,8 +11,10 @@ L6_ENCOUNTER = 6
 
 SCOUT_ENCOUNTER = 'scout encounter'
 SCOUT_PAIR_ENCOUNTER = 'scout pair encounter'
-GUNSHIP_ENCOUNTER = 'gunship encounter'
 SCOUT_TRIO_ENCOUNTER = 'scout trio encounter'
+FIGHTER_ENCOUNTER = 'fighter encounter'
+GUNSHIP_ENCOUNTER = 'gunship encounter'
+
 
 PLACEHOLDER_ENCOUNTER = 'placeholder'
 
@@ -20,12 +22,14 @@ encounters_to_ship_lists = {
     SCOUT_ENCOUNTER: [SCOUT],
     SCOUT_PAIR_ENCOUNTER: [SCOUT, SCOUT],
     SCOUT_TRIO_ENCOUNTER: [SCOUT, SCOUT, SCOUT],
+    FIGHTER_ENCOUNTER: [FIGHTER],
     GUNSHIP_ENCOUNTER: [GUNSHIP],
     PLACEHOLDER_ENCOUNTER: ['placeholder']
 }
 
 L0_ENCOUNTER_TABLE = {SCOUT_ENCOUNTER: 50,
                       SCOUT_PAIR_ENCOUNTER: 100,
+                      FIGHTER_ENCOUNTER: 50,
                       SCOUT_TRIO_ENCOUNTER: 50,
                       GUNSHIP_ENCOUNTER: 50}
 L1_ENCOUNTER_TABLE = {PLACEHOLDER_ENCOUNTER: 50}

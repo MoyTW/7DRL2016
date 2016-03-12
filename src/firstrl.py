@@ -31,6 +31,12 @@ def place_objects(gm, zone):
                 ai_component = ScoutMonster()
                 monster = Object(x, y, 'S', SCOUT, libtcod.darker_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
+            elif choice == FIGHTER:
+                fighter_component = Fighter(player=player, hp=30, defense=0, power=0, xp=50, base_speed=125,
+                                            death_function=projectile_death)
+                ai_component = FighterMonster()
+                monster = Object(x, y, 'F', FIGHTER, libtcod.darker_green, blocks=True, fighter=fighter_component,
+                                 ai=ai_component)
             elif choice == GUNSHIP:
                 fighter_component = Fighter(player=player, hp=50, defense=4, power=3, xp=100, base_speed=200,
                                             death_function=monster_death)
@@ -185,6 +191,17 @@ class ScoutMonster(object):
                 monster.move_towards(player.x, player.y, game_map, objects)
             elif player.fighter.hp > 0:
                 fire_small_shotgun(caster=monster, target=player, spread=2, pellets=3)
+
+
+class FighterMonster(object):
+    def take_turn(self):
+        monster = self.owner
+        if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
+            monster.move_towards(player.x, player.y, game_map, objects)
+            if player.fighter.hp > 0:
+                fire_small_gatling(caster=monster, target=player)
+                fire_small_gatling(caster=monster, target=player)
+                fire_small_gatling(caster=monster, target=player)
 
 
 class GunshipMonster(object):
@@ -618,7 +635,8 @@ def cast_confuse():
 
 
 def cast_throw_boomerang(caster, target):
-    fighter_component = Fighter(player=player, hp=1, defense=0, power=5, xp=0, base_speed=33, death_function=projectile_death)
+    fighter_component = Fighter(player=player, hp=1, defense=0, power=5, xp=0, base_speed=33,
+                                death_function=projectile_death)
     path = ReversePath(caster.x, caster.y, target.x, target.y)
     ai_component = ProjectileAI(path, game_map, objects)
     projectile = Object(caster.x, caster.y, 'B', 'boomerang', libtcod.red, blocks=False, fighter=fighter_component,
@@ -628,7 +646,8 @@ def cast_throw_boomerang(caster, target):
 
 
 def single_small_shotgun(source_x, source_y, target_x, target_y):
-    fighter_component = Fighter(player=player, hp=1, defense=0, power=1, xp=0, base_speed=25, death_function=projectile_death)
+    fighter_component = Fighter(player=player, hp=1, defense=0, power=1, xp=0, base_speed=25,
+                                death_function=projectile_death)
     path = LinePath(source_x, source_y, target_x, target_y)
     ai_component = ProjectileAI(path, game_map, objects)
     projectile = Object(source_x, source_y, 's', 'small shotgun shell', libtcod.red, blocks=False, is_projectile=True,
@@ -644,8 +663,20 @@ def fire_small_shotgun(caster, target, spread=5, pellets=5):
         single_small_shotgun(caster.x, caster.y, target.x + dx, target.y + dy)
 
 
+def fire_small_gatling(caster, target):
+    fighter_component = Fighter(player=player, hp=1, defense=0, power=2, xp=0, base_speed=50,
+                                death_function=projectile_death)
+    path = LinePath(caster.x, caster.y, target.x, target.y)
+    ai_component = ProjectileAI(path, game_map, objects)
+    projectile = Object(caster.x, caster.y, 'g', 'small gatling shell', libtcod.red, blocks=False, is_projectile=True,
+                        fighter=fighter_component, ai=ai_component)
+    objects.append(projectile)
+    projectile.send_to_back(objects)
+
+
 def fire_small_cannon(caster, target):
-    fighter_component = Fighter(player=player, hp=1, defense=0, power=5, xp=0, base_speed=50, death_function=projectile_death)
+    fighter_component = Fighter(player=player, hp=1, defense=0, power=5, xp=0, base_speed=50,
+                                death_function=projectile_death)
     path = LinePath(caster.x, caster.y, target.x, target.y)
     ai_component = ProjectileAI(path, game_map, objects)
     projectile = Object(caster.x, caster.y, 'c', 'small cannon shell', libtcod.red, blocks=False, is_projectile=True,
@@ -655,7 +686,8 @@ def fire_small_cannon(caster, target):
 
 
 def fire_cutting_laser(caster, target):
-    fighter_component = Fighter(player=player, hp=1, defense=0, power=25, xp=0, base_speed=1, death_function=projectile_death)
+    fighter_component = Fighter(player=player, hp=1, defense=0, power=25, xp=0, base_speed=1,
+                                death_function=projectile_death)
     path = LinePath(caster.x, caster.y, target.x, target.y)
     ai_component = ProjectileAI(path, game_map, objects)
     projectile = Object(caster.x, caster.y, '*', 'cutting laser beam', libtcod.red, blocks=False, is_projectile=True,

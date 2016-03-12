@@ -61,5 +61,6 @@ GUNSHIPS_PER_LEVEL = [[10, 1], [30, 2]]
 POINT_DEFENSE_DESTROYERS_PER_LEVEL = [[10, 2], [30, 3]]
 
 SCOUT = 'scout'
+FIGHTER = 'fighter'
 GUNSHIP = 'gunship'
 POINT_DEFENSE_DESTROYER = 'point defense destroyer'
