@@ -118,7 +118,8 @@ def make_game_map():
 
     zones = []
 
-    for r in range(MAX_ROOMS):
+    zone_gen_attempts = 0
+    while zone_gen_attempts < MAX_ZONE_GEN_ATTEMPTS and len(zones) < MAX_ZONES:
         # Size of zone
         w = libtcod.random_get_int(0, ROOM_MIN_SIZE, ROOM_MAX_SIZE)
         h = libtcod.random_get_int(0, ROOM_MIN_SIZE, ROOM_MAX_SIZE)
