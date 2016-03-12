@@ -73,14 +73,14 @@ def place_objects(gm, zone, safe=False):
             zone.register_enemy(monster)
             objects.append(monster)
 
-    max_items = utils.from_dungeon_level(dungeon_level, [[2, 1], [3, 4]])
+    max_items = utils.from_dungeon_level(dungeon_level, [[1, 1], [2, 4], [3, 6]])
     item_chances = {ITEM_DUCT_TAPE: 45,
                     ITEM_EXTRA_BATTERY: 25,
                     ITEM_RED_PAINT: 10,
                     ITEM_EMP: 10}
 
     # Place items
-    num_items = 5  # libtcod.random_get_int(0, 0, max_items)
+    num_items = libtcod.random_get_int(0, 0, max_items)
     for _ in range(num_items):
         (x, y) = zone.random_coordinates()
 
