@@ -38,7 +38,7 @@ def place_objects(gm, zone):
                 monster = Object(x, y, 'F', FIGHTER, libtcod.darker_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
             elif choice == GUNSHIP:
-                fighter_component = Fighter(player=player, hp=50, defense=4, power=3, xp=100, base_speed=200,
+                fighter_component = Fighter(player=player, hp=50, defense=4, power=3, xp=100, base_speed=100,
                                             death_function=monster_death)
                 ai_component = GunshipMonster()
                 monster = Object(x, y, 'G', GUNSHIP, libtcod.darker_green, blocks=True, fighter=fighter_component,
@@ -208,12 +208,17 @@ class GunshipMonster(object):
     def __init__(self, cooldown=4):
         self.cooldown = cooldown
         self.current_cooldown = 0
+        self.move = True
 
     def take_turn(self):
         monster = self.owner
 
         if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
-            monster.move_towards(player.x, player.y, game_map, objects)
+            if self.move and monster.distance_to(player) >= 5:
+                monster.move_towards(player.x, player.y, game_map, objects)
+                self.move = False
+            else:
+                self.move = True
             if self.current_cooldown == 0:
                 fire_small_shotgun(caster=monster, target=player)
                 self.current_cooldown += self.cooldown
