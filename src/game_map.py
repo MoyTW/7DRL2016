@@ -1,3 +1,6 @@
+import libtcodpy as libtcod
+
+
 class Tile(object):
     def __init__(self, blocked, block_sight=None):
         self.blocked = blocked
@@ -41,6 +44,11 @@ class Zone(object):
 
     def center(self):
         return (self.x1 + self.x2) / 2, (self.y1 + self.y2) / 2
+
+    def random_coordinates(self):
+        x = libtcod.random_get_int(0, self.x1 + 1, self.x2 - 1)
+        y = libtcod.random_get_int(0, self.y1 + 1, self.y2 - 1)
+        return x, y
 
     def intersect(self, other):
         return self.x1 <= other.x2 and self.x2 >= other.x1 and self.y1 <= other.y2 and self.y2 >= other.y1

@@ -25,8 +25,7 @@ def place_objects(gm, zone):
 
     num_monsters = 1  # libtcod.random_get_int(0, 0, max_monsters)
     for _ in range(num_monsters):
-        x = libtcod.random_get_int(0, zone.x1 + 1, zone.x2 - 1)
-        y = libtcod.random_get_int(0, zone.y1 + 1, zone.y2 - 1)
+        (x, y) = zone.random_coordinates()
 
         if not is_blocked(x, y, gm, objects):
             choice = random_choice(monster_chances)
@@ -56,8 +55,7 @@ def place_objects(gm, zone):
     # Place items
     num_items = libtcod.random_get_int(0, 0, max_items)
     for _ in range(num_items):
-        x = libtcod.random_get_int(0, zone.x1 + 1, zone.x2 - 1)
-        y = libtcod.random_get_int(0, zone.y1 + 1, zone.y2 - 1)
+        (x, y) = zone.random_coordinates()
 
         if not is_blocked(x, y, gm, objects):
             choice = random_choice(item_chances)
@@ -89,8 +87,7 @@ def place_objects(gm, zone):
 
     num_satellites = from_dungeon_level(dungeon_level, SATELLITES_PER_LEVEL)
     for _ in range(num_satellites):
-        x = libtcod.random_get_int(0, zone.x1 + 1, zone.x2 - 1)
-        y = libtcod.random_get_int(0, zone.y1 + 1, zone.y2 - 1)
+        (x, y) = zone.random_coordinates()
 
         if not is_blocked(x, y, gm, objects):
             fighter_component = Fighter(player=player, hp=1, defense=9999, power=0, xp=0, death_function=projectile_death)
