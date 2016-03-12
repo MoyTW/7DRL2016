@@ -11,7 +11,7 @@ import utils
 import tables
 
 
-def place_objects(gm, zone):
+def place_objects(gm, zone, safe=False):
     max_items = utils.from_dungeon_level(dungeon_level, [[2, 1], [3, 4]])
     item_chances = {'heal': 35,
                     'lightning': utils.from_dungeon_level(dungeon_level, [[15, 1], [30, 3], [45, 5]]),
@@ -20,7 +20,10 @@ def place_objects(gm, zone):
                     'sword': 25,
                     'shield': 25}  # TODO: Enum?
 
-    enemies = tables.choose_encounter_for_level(dungeon_level)
+    if not safe:
+        enemies = tables.choose_encounter_for_level(dungeon_level)
+    else:
+        enemies = []
     for choice in enemies:
         (x, y) = zone.random_coordinates()
 
@@ -145,7 +148,7 @@ def make_game_map():
         if not failed:
             (new_x, new_y) = new_zone.center()
 
-            place_objects(gm, new_zone)
+            place_objects(gm, new_zone, len(zones) == 0)
 
             if len(zones) == 0:
                 player.x = new_x
