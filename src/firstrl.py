@@ -986,6 +986,7 @@ def play_game():
                 obj.fighter.time_until_turn -= time
 
         if player.fighter.time_until_turn == 0:
+            check_level_up()
             player_action = handle_keys()
             if player_action == 'exit':
                 break
@@ -999,8 +1000,6 @@ def play_game():
                 if o.fighter and o.fighter.time_until_turn == 0 and o.ai:
                     o.ai.take_turn()
                     o.fighter.end_turn()
-
-        check_level_up()
 
 
 def main_menu():
