@@ -9,31 +9,47 @@ L4_ENCOUNTER = 4
 L5_ENCOUNTER = 5
 L6_ENCOUNTER = 6
 
+EMPTY_ENCOUNTER = 'empty encounter'
 SCOUT_ENCOUNTER = 'scout encounter'
 SCOUT_PAIR_ENCOUNTER = 'scout pair encounter'
 SCOUT_TRIO_ENCOUNTER = 'scout trio encounter'
 FIGHTER_ENCOUNTER = 'fighter encounter'
+FIGHTER_RECON_ENCOUNTER = 'fighter recon encounter'
+FIGHTER_PAIR_ENCOUNTER = 'fighter pair encounter'
+FIGHTER_FLIGHT_ENCOUNTER = 'fighter flight encounter'
 GUNSHIP_ENCOUNTER = 'gunship encounter'
+GUNSHIP_RECON_ENCOUNTER = 'gunship escorted encounter'
+GUNSHIP_PAIR_ENCOUNTER = 'gunship pair encounter'
 
 
 PLACEHOLDER_ENCOUNTER = 'placeholder'
 
 encounters_to_ship_lists = {
+    EMPTY_ENCOUNTER: [],
     SCOUT_ENCOUNTER: [SCOUT],
     SCOUT_PAIR_ENCOUNTER: [SCOUT, SCOUT],
     SCOUT_TRIO_ENCOUNTER: [SCOUT, SCOUT, SCOUT],
     FIGHTER_ENCOUNTER: [FIGHTER],
+    FIGHTER_RECON_ENCOUNTER: [FIGHTER, SCOUT, SCOUT],
+    FIGHTER_PAIR_ENCOUNTER: [FIGHTER, FIGHTER],
+    FIGHTER_FLIGHT_ENCOUNTER: [FIGHTER, FIGHTER, FIGHTER, FIGHTER],
     GUNSHIP_ENCOUNTER: [GUNSHIP],
+    GUNSHIP_RECON_ENCOUNTER: [GUNSHIP, SCOUT, SCOUT],
     PLACEHOLDER_ENCOUNTER: ['placeholder']
 }
 
 L0_ENCOUNTER_TABLE = {SCOUT_ENCOUNTER: 50,
                       SCOUT_PAIR_ENCOUNTER: 100,
-                      FIGHTER_ENCOUNTER: 50,
-                      SCOUT_TRIO_ENCOUNTER: 50,
+                      SCOUT_TRIO_ENCOUNTER: 100,
+                      FIGHTER_ENCOUNTER: 50}
+L1_ENCOUNTER_TABLE = {FIGHTER_ENCOUNTER: 50,
+                      FIGHTER_RECON_ENCOUNTER: 100,
+                      FIGHTER_PAIR_ENCOUNTER: 100,
                       GUNSHIP_ENCOUNTER: 50}
-L1_ENCOUNTER_TABLE = {PLACEHOLDER_ENCOUNTER: 50}
-L2_ENCOUNTER_TABLE = {PLACEHOLDER_ENCOUNTER: 50}
+L2_ENCOUNTER_TABLE = {GUNSHIP_ENCOUNTER: 50,
+                      FIGHTER_FLIGHT_ENCOUNTER: 100,
+                      GUNSHIP_RECON_ENCOUNTER: 100,
+                      GUNSHIP_PAIR_ENCOUNTER: 50}
 L3_ENCOUNTER_TABLE = {PLACEHOLDER_ENCOUNTER: 50}
 L4_ENCOUNTER_TABLE = {PLACEHOLDER_ENCOUNTER: 50}
 L5_ENCOUNTER_TABLE = {PLACEHOLDER_ENCOUNTER: 50}
@@ -48,19 +64,19 @@ ENCOUNTERS_TO_ENCOUNTER_TABLES = {L0_ENCOUNTER: L0_ENCOUNTER_TABLE,
                                   L6_ENCOUNTER: L6_ENCOUNTER_TABLE}
 
 # This table is kind of silly in that there's a much better way to represent it! If you have time (you won't)
-# Scouting parties, fighter patrols, or gunships
+# Scouts
 L0_ENCOUNTER_CHANCES = [[20, 1], [10, 2], [05, 3], [00, 4], [00, 5], [00, 6], [00, 7], [00, 8], [00, 9]]
-# Gunships, grouped gunships, or corvettes
+# Fighters
 L1_ENCOUNTER_CHANCES = [[10, 1], [20, 2], [10, 3], [05, 4], [00, 5], [00, 6], [00, 7], [00, 8], [00, 9]]
-# Corvettes, frigates, or recon in force parties
+# Gunships
 L2_ENCOUNTER_CHANCES = [[05, 1], [10, 2], [20, 3], [10, 4], [05, 5], [00, 6], [00, 7], [00, 8], [00, 9]]
-# Destroyers, corvette groups, or frigates
+# Frigates
 L3_ENCOUNTER_CHANCES = [[00, 1], [05, 2], [10, 3], [20, 4], [10, 5], [05, 6], [00, 7], [00, 8], [00, 9]]
-# Escorted frigates, destroyers, and cruisers
+# Destroyers
 L4_ENCOUNTER_CHANCES = [[00, 1], [00, 2], [05, 3], [10, 4], [20, 5], [10, 6], [05, 7], [00, 8], [00, 9]]
-# Escorted minor battle groups
+# Cruisers
 L5_ENCOUNTER_CHANCES = [[00, 1], [00, 2], [00, 3], [05, 4], [10, 5], [20, 6], [10, 7], [05, 8], [00, 9]]
-# Full battle groups with a range of ships
+# DEATH
 L6_ENCOUNTER_CHANCES = [[00, 1], [00, 2], [00, 3], [00, 4], [05, 5], [10, 6], [20, 7], [10, 8], [05, 9]]
 
 
