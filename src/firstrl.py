@@ -3,7 +3,7 @@ import textwrap
 import shelve
 from constants import *  # TODO: Bad programmer!
 from render import Renderer
-from utils import LinePath, ReversePath
+from paths import LinePath, ReversePath
 from entities import Object, is_blocked, Fighter
 from ais import ProjectileAI
 from game_map import Tile, Zone
