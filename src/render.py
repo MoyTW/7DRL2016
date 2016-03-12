@@ -179,3 +179,7 @@ class Renderer(object):
         self.camera_x = camera_x
         self.camera_y = camera_y
         self.fov_recompute = fov_recompute
+
+    def clear_objects(self, con, objects):
+        for obj in objects:
+            obj.clear(con, self.camera_x, self.camera_y)

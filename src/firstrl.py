@@ -754,11 +754,6 @@ def message(new_msg, color=libtcod.white):
         game_msgs.append((line, color))
 
 
-def clear_objects():
-    for o in objects:
-        o.clear(con, renderer.camera_x, renderer.camera_y)
-
-
 # =================================================== MAIN LOOP ==================================================
 def new_game():
     global player, inventory, game_msgs, game_state, dungeon_level, game_map
@@ -844,7 +839,7 @@ def play_game():
 
         check_level_up()
 
-        clear_objects()
+        renderer.clear_objects(con, objects)
 
         # TODO: Kind of messy way of structuring this!
         time = time_to_next_event(objects)
