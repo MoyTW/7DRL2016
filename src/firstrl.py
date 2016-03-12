@@ -7,19 +7,20 @@ from paths import LinePath, ReversePath
 from entities import Object, is_blocked, Fighter
 from ais import ProjectileAI
 from game_map import Tile, Zone
+import utils
 
 
 def place_objects(gm, zone):
-    max_monsters = from_dungeon_level(dungeon_level, [[2, 1], [3, 4], [5, 6]])
-    monster_chances = {SCOUT: from_dungeon_level(dungeon_level, SCOUTS_PER_LEVEL),
-                       GUNSHIP: from_dungeon_level(dungeon_level, GUNSHIPS_PER_LEVEL),
-                       POINT_DEFENSE_DESTROYER: from_dungeon_level(dungeon_level, POINT_DEFENSE_DESTROYERS_PER_LEVEL)}
+    max_monsters = utils.from_dungeon_level(dungeon_level, [[2, 1], [3, 4], [5, 6]])
+    monster_chances = {SCOUT: utils.from_dungeon_level(dungeon_level, SCOUTS_PER_LEVEL),
+                       GUNSHIP: utils.from_dungeon_level(dungeon_level, GUNSHIPS_PER_LEVEL),
+                       POINT_DEFENSE_DESTROYER: utils.from_dungeon_level(dungeon_level, POINT_DEFENSE_DESTROYERS_PER_LEVEL)}
 
-    max_items = from_dungeon_level(dungeon_level, [[2, 1], [3, 4]])
+    max_items = utils.from_dungeon_level(dungeon_level, [[2, 1], [3, 4]])
     item_chances = {'heal': 35,
-                    'lightning': from_dungeon_level(dungeon_level, [[15, 1], [30, 3], [45, 5]]),
-                    'fireball': from_dungeon_level(dungeon_level, [[5, 2], [25, 5]]),
-                    'confuse': from_dungeon_level(dungeon_level, [[5, 3], [25, 6]]),
+                    'lightning': utils.from_dungeon_level(dungeon_level, [[15, 1], [30, 3], [45, 5]]),
+                    'fireball': utils.from_dungeon_level(dungeon_level, [[5, 2], [25, 5]]),
+                    'confuse': utils.from_dungeon_level(dungeon_level, [[5, 3], [25, 6]]),
                     'sword': 25,
                     'shield': 25}  # TODO: Enum?
 
@@ -28,7 +29,7 @@ def place_objects(gm, zone):
         (x, y) = zone.random_coordinates()
 
         if not is_blocked(x, y, gm, objects):
-            choice = random_choice(monster_chances)
+            choice = utils.random_choice(monster_chances)
 
             if choice == SCOUT:
                 fighter_component = Fighter(player=player, hp=10, defense=0, power=0, xp=30, base_speed=75,
@@ -58,7 +59,7 @@ def place_objects(gm, zone):
         (x, y) = zone.random_coordinates()
 
         if not is_blocked(x, y, gm, objects):
-            choice = random_choice(item_chances)
+            choice = utils.random_choice(item_chances)
 
             if choice == 'heal':
                 item_component = Item(use_function=cast_heal)
@@ -85,7 +86,7 @@ def place_objects(gm, zone):
             zone.register_item(item)
             item.send_to_back(objects)
 
-    num_satellites = from_dungeon_level(dungeon_level, SATELLITES_PER_LEVEL)
+    num_satellites = utils.from_dungeon_level(dungeon_level, SATELLITES_PER_LEVEL)
     for _ in range(num_satellites):
         (x, y) = zone.random_coordinates()
 
@@ -173,43 +174,6 @@ def make_game_map():
         zone.finalize(zone_intel.get(dungeon_level, False))
 
     return gm
-
-
-def random_choice_index(chances):
-    """ Given a list of probabilities, chooses the index of one according to their values. Technically can take any list
-    of numbers, but probabilities are the most intuitive.
-
-    :param chances: The list of probabilities (i.e. [15, 20, 15, 50])
-    :return: The index of the chosen probability
-    """
-    dice = libtcod.random_get_int(0, 1, sum(chances))
-
-    running_sum = 0
-    choice = 0
-    for w in chances:
-        running_sum += w
-        if dice <= running_sum:
-            return choice
-        choice += 1
-
-
-def random_choice(chances_dict):
-    chances = chances_dict.values()
-    strings = chances_dict.keys()
-    return strings[random_choice_index(chances)]
-
-
-# TODO: Pass the dang thing in
-def from_dungeon_level(_dungeon_level, table):
-    """Given a table, return the value for the current dungeon level.
-    :param _dungeon_level: The dungeon level to draw from the table for
-    :param table: The table, formatted as a list of [value, level] pairs.
-    :return: The value for the current dungeon level
-    """
-    for (value, level) in reversed(table):
-        if _dungeon_level >= level:
-            return value
-    return 0
 
 
 class ScoutMonster(object):
