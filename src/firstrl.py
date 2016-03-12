@@ -146,7 +146,7 @@ def make_game_map():
     # Generate the stairs
     stairs_zone = zones[libtcod.random_get_int(0, 1, len(zones) - 1)]
     (stairs_x, stairs_y) = stairs_zone.random_unblocked_coordinates(gm, objects)
-    stairs = Object(stairs_x, stairs_y, '<', 'stairs', libtcod.white, always_visible=True)
+    stairs = Object(stairs_x, stairs_y, 'J', 'jump point', libtcod.white, always_visible=True)
     stairs_zone.register_item(stairs)
     objects.append(stairs)
     stairs.send_to_back(objects)
