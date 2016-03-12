@@ -1,4 +1,5 @@
 import libtcodpy as libtcod
+from entities import is_blocked
 
 
 class Tile(object):
@@ -48,6 +49,12 @@ class Zone(object):
     def random_coordinates(self):
         x = libtcod.random_get_int(0, self.x1 + 1, self.x2 - 1)
         y = libtcod.random_get_int(0, self.y1 + 1, self.y2 - 1)
+        return x, y
+
+    def random_unblocked_coordinates(self, game_map, objects):
+        (x, y) = self.random_coordinates()
+        while is_blocked(x, y, game_map, objects):
+            (x, y) = self.random_coordinates()
         return x, y
 
     def intersect(self, other):

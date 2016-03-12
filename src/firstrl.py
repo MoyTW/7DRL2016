@@ -143,19 +143,17 @@ def make_game_map():
 
             zones.append(new_zone)
 
-    # TODO: Having trouble keeping track of scope/assignment!
-    stairs = Object(new_x, new_y, '<', 'stairs', libtcod.white, always_visible=True)
-    zones[-1].register_item(stairs)
+    # Generate the stairs
+    stairs_zone = zones[libtcod.random_get_int(0, 1, len(zones) - 1)]
+    (stairs_x, stairs_y) = stairs_zone.random_unblocked_coordinates(gm, objects)
+    stairs = Object(stairs_x, stairs_y, '<', 'stairs', libtcod.white, always_visible=True)
+    stairs_zone.register_item(stairs)
     objects.append(stairs)
     stairs.send_to_back(objects)
 
     # Generate the intel
-    # TODO: This is an awkward formulation!
     intel_zone = zones[libtcod.random_get_int(0, 1, len(zones) - 1)]
-
-    (intel_x, intel_y) = intel_zone.random_coordinates()
-    while is_blocked(intel_x, intel_y, gm, objects):
-        (intel_x, intel_y) = intel_zone.random_coordinates()
+    (intel_x, intel_y) = intel_zone.random_unblocked_coordinates(gm, objects)
 
     # Intel gives you vision of the next level
     def use_fn():
