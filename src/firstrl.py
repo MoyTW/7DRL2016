@@ -870,14 +870,14 @@ def new_game():
     initialize_fov()
 
     game_msgs = []
-    message('Initial Message')
+    message('Good luck, captain! Remember to not die!')
 
     # Initial equipment
-    equipment_component = Equipment(slot='right hand', power_bonus=2)
-    obj = Object(0, 0, '-', 'dagger', libtcod.sky, equipment=equipment_component, item=Item())
-    inventory.append(obj)
-    equipment_component.equip()
-    obj.always_visible = True
+#    equipment_component = Equipment(slot='right hand', power_bonus=2)
+#    obj = Object(0, 0, '-', 'dagger', libtcod.sky, equipment=equipment_component, item=Item())
+#    inventory.append(obj)
+#    equipment_component.equip()
+#    obj.always_visible = True
 
 
 def next_level():
