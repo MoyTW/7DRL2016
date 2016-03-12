@@ -653,13 +653,7 @@ def player_death(_):
 
 def monster_death(monster):
     message(monster.name.capitalize() + ' is dead! You gain ' + str(monster.fighter.xp) + ' xp!', libtcod.red)
-    monster.char = '%'
-    monster.color = libtcod.dark_red
-    monster.blocks = False
-    monster.fighter = None
-    monster.ai = None
-    monster.name = 'Remains of ' + monster.name
-    monster.send_to_back(objects)
+    objects.remove(monster)
 
 
 def projectile_death(projectile):
