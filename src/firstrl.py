@@ -982,7 +982,6 @@ def play_game():
         if player.fighter.time_until_turn == 0:
             player_action = handle_keys()
             if player_action == 'exit':
-                save_game()
                 break
             elif player_action != GAME_STATE_DIDNT_TAKE_TURN:
                 player.fighter.end_turn()
@@ -1009,18 +1008,11 @@ def main_menu():
         libtcod.console_print_ex(0, SCREEN_WIDTH/2, SCREEN_HEIGHT/2-3, libtcod.BKGND_NONE, libtcod.CENTER, 'by MoyTW')
 
         # menu + choice
-        choice = menu('', ['New game', 'Continue game', 'Quit'], 24)
+        choice = menu('', ['New game', 'Quit'], 24)
         if choice == 0:
             new_game()
             play_game()
         elif choice == 1:
-            try:
-                load_game()
-            except:
-                msgbox('\n Error loading game.\n', 24)
-                continue
-            play_game()
-        elif choice == 2:
             break
 
 # Set font
