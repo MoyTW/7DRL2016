@@ -149,9 +149,20 @@ def make_game_map():
     objects.append(stairs)
     stairs.send_to_back(objects)
 
+    # Generate the intel
+    # TODO: This is an awkward formulation!
+    intel_zone = zones[libtcod.random_get_int(0, 1, len(zones) - 1)]
+    (intel_x, intel_y) = intel_zone.random_coordinates()
+    while is_blocked(intel_x, intel_y, gm, objects):
+        (intel_x, intel_y) = intel_zone.random_coordinates()
+    intel = Object(intel_x, intel_y, 'I', 'intel', libtcod.light_violet, always_visible=True, item=Item())
+    intel_zone.register_item(intel)
+    objects.append(intel)
+    intel.send_to_back(objects)
+
     # Make Zones read-only (well not really, but the summaries become read-only)
     for zone in zones:
-        zone.finalize(False)
+        zone.finalize(True)
 
     return gm
 
