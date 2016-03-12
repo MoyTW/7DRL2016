@@ -211,7 +211,8 @@ def make_game_map():
 
     # Make Zones read-only (well not really, but the summaries become read-only)
     for zone in zones:
-        zone.finalize(zone_intel.get(dungeon_level, False))
+        zone.finalize(True)
+        # zone.finalize(zone_intel.get(dungeon_level, False))
 
     return gm
 
@@ -1049,6 +1050,6 @@ panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
 # I don't want this to be real-time, so this line effectively does nothing!
 libtcod.sys_set_fps(LIMIT_FPS)
 
-# libtcod.console_set_fullscreen(True)
+libtcod.console_set_fullscreen(True)
 
 main_menu()
