@@ -835,38 +835,6 @@ def fire_cutting_laser(caster, target):
     projectile.send_to_back(objects)
 
 
-def save_game():
-    pass
-#    save_file = shelve.open('save_game', 'n')
-#    save_file['game_map'] = game_map
-#    save_file['objects'] = objects
-#    save_file['player_index'] = objects.index(player)
-#    save_file['inventory'] = inventory
-#    save_file['game_msgs'] = game_msgs
-#    save_file['game_state'] = game_state
-#    save_file['stairs_index'] = objects.index(stairs)
-#    save_file['dungeon_level'] = dungeon_level
-#    save_file.close()
-
-
-def load_game():
-    pass
-#    global game_map, objects, player, inventory, game_msgs, game_state, stairs, dungeon_level
-#
-#    save_file = shelve.open('save_game', 'r')
-#    game_map = save_file['game_map']
-#    objects = save_file['objects']
-#    player = objects[save_file['player_index']]
-#    inventory = save_file['inventory']
-#    game_msgs = save_file['game_msgs']
-#    game_state = save_file['game_state']
-#    stairs = objects[save_file['stairs_index']]
-#    dungeon_level = save_file['dungeon_level']
-#    save_file.close()
-
-    initialize_fov()
-
-
 def message(new_msg, color=libtcod.white):
     new_msg_lines = textwrap.wrap(new_msg, MSG_WIDTH)
 
