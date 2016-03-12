@@ -1,5 +1,6 @@
 import libtcodpy as libtcod
 from constants import *  # TODO: Bad programmer!
+import utils
 
 color_dark_wall = libtcod.Color(120, 120, 160)
 color_light_wall = libtcod.Color(200, 200, 220)
@@ -65,7 +66,7 @@ def render_bar(panel, x, y, total_width, name, value, maximum, bar_color, back_c
                              name + ': ' + str(value) + '/' + str(maximum))
 
 
-def color_square(color, con, fov_map, game_map, x, y, camera_x, camera_y):
+def color_square(color, con, fov_map, game_map, x, y, camera_x, camera_y, flag=libtcod.BKGND_SET):
     # Don't try to color squares off the map
     if x >= MAP_WIDTH or y >= MAP_HEIGHT:
         return False
@@ -73,7 +74,7 @@ def color_square(color, con, fov_map, game_map, x, y, camera_x, camera_y):
     visible = libtcod.map_is_in_fov(fov_map, x, y)
     wall = game_map[x][y].block_sight
     if visible and not wall:
-        libtcod.console_set_char_background(con, x - camera_x, y - camera_y, color, libtcod.BKGND_SET)
+        libtcod.console_set_char_background(con, x - camera_x, y - camera_y, color, flag)
         return True
     return False
 
@@ -91,6 +92,13 @@ def draw_paths(con, fov_map, game_map, camera_x, camera_y, objects, timeframe):
                     continue_draw = color_square(color_danger, con, fov_map, game_map, x, y, camera_x, camera_y)
                     if game_map[x][y].blocked:
                         continue_draw = False
+
+
+def draw_rangefinder(con, fov_map, game_map, player, camera_x, camera_y):
+    tiles = utils.calculate_circle(player.x, player.y, 3)
+    for tile in tiles:
+        color_square(libtcod.lightest_blue, con, fov_map, game_map, tile[0], tile[1], camera_x, camera_y,
+                     libtcod.BKGND_ALPHA(.1))
 
 
 def highlight_movers(con, fov_map, game_map, camera_x, camera_y, objects, timeframe):
@@ -134,6 +142,7 @@ def render_all(fov_recompute, player, objects, fov_map, game_map, con, panel, ga
                     libtcod.console_set_char_background(con, x, y, color_light_ground, libtcod.BKGND_SET)
                 game_map[map_x][map_y].explored = True
 
+    draw_rangefinder(con, fov_map, game_map, player, camera_x, camera_y)
     draw_paths(con, fov_map, game_map, camera_x, camera_y, objects, timeframe)
     highlight_movers(con, fov_map, game_map, camera_x, camera_y, objects, timeframe)
 

@@ -1,4 +1,6 @@
 import libtcodpy as libtcod
+from constants import *  # lol
+import math
 
 
 def random_choice_index(chances):
@@ -35,3 +37,21 @@ def from_dungeon_level(dungeon_level, table):
         if dungeon_level >= level:
             return value
     return 0
+
+
+# TODO: This is a dumb way of doing it
+def calculate_circle(x, y, distance):
+    xmin = x - distance
+    xmax = x + distance
+    ymin = y - distance
+    ymax = y + distance
+
+    tiles = []
+    for _x in range(xmin, xmax + 1):
+        for _y in range(ymin, ymax + 1):
+            dx = _x - x
+            dy = _y - y
+            _distance = int(math.sqrt(dx ** 2 + dy ** 2))
+            if distance == _distance:
+                tiles.append([_x, _y])
+    return tiles
