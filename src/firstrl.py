@@ -940,8 +940,11 @@ def play_game():
                    "CONTROLS:\n"
                    "KEYPAD: Movement\n"
                    "g: pick up an item in your tile\n"
+                   "i: view inventory and use items\n"
+                   "d: drop items\n"
                    "r: view sector reports (DO THIS)\n"
-                   "<: jump to the next sector (must be on the jump point)\n",
+                   "<: jump to the next sector (must be on the jump point)\n"
+                   "ESC: quit to menu",
                    70)
             tutorial = False
 
