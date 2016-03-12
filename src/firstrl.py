@@ -47,7 +47,7 @@ def place_objects(gm, zone, safe=False):
                 monster = Object(x, y, 'G', GUNSHIP, libtcod.darker_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
             elif choice == FRIGATE:
-                fighter_component = Fighter(player=player, hp=150, defense=10, power=3, xp=100, base_speed=200,
+                fighter_component = Fighter(player=player, hp=150, defense=10, power=3, xp=100, base_speed=250,
                                             death_function=monster_death)
                 ai_component = FrigateMonster()
                 monster = Object(x, y, 'R', FRIGATE, libtcod.darker_green, blocks=True, fighter=fighter_component,

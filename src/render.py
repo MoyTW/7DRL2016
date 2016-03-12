@@ -65,7 +65,7 @@ def render_bar(panel, x, y, total_width, name, value, maximum, bar_color, back_c
                              name + ': ' + str(value) + '/' + str(maximum))
 
 
-def color_square_danger(con, fov_map, game_map, x, y, camera_x, camera_y):
+def color_square(color, con, fov_map, game_map, x, y, camera_x, camera_y):
     # Don't try to color squares off the map
     if x >= MAP_WIDTH or y >= MAP_HEIGHT:
         return False
@@ -73,7 +73,7 @@ def color_square_danger(con, fov_map, game_map, x, y, camera_x, camera_y):
     visible = libtcod.map_is_in_fov(fov_map, x, y)
     wall = game_map[x][y].block_sight
     if visible and not wall:
-        libtcod.console_set_char_background(con, x - camera_x, y - camera_y, color_danger, libtcod.BKGND_SET)
+        libtcod.console_set_char_background(con, x - camera_x, y - camera_y, color, libtcod.BKGND_SET)
         return True
     return False
 
@@ -88,9 +88,16 @@ def draw_paths(con, fov_map, game_map, camera_x, camera_y, objects, timeframe):
 
             for (x, y) in path.project(moves_in_timeframe):
                 if continue_draw:
-                    continue_draw = color_square_danger(con, fov_map, game_map, x, y, camera_x, camera_y)
+                    continue_draw = color_square(color_danger, con, fov_map, game_map, x, y, camera_x, camera_y)
                     if game_map[x][y].blocked:
                         continue_draw = False
+
+
+def highlight_movers(con, fov_map, game_map, camera_x, camera_y, objects, timeframe):
+    for obj in objects:
+        if obj.ai and not hasattr(obj.ai, 'path') and obj.fighter:
+            if obj.fighter.time_until_turn < timeframe:
+                color_square(libtcod.lightest_green, con, fov_map, game_map, obj.x, obj.y, camera_x, camera_y)
 
 
 def render_all(fov_recompute, player, objects, fov_map, game_map, con, panel, game_msgs, dungeon_level,
@@ -128,6 +135,7 @@ def render_all(fov_recompute, player, objects, fov_map, game_map, con, panel, ga
                 game_map[map_x][map_y].explored = True
 
     draw_paths(con, fov_map, game_map, camera_x, camera_y, objects, timeframe)
+    highlight_movers(con, fov_map, game_map, camera_x, camera_y, objects, timeframe)
 
     libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
 
