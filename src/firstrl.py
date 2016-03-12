@@ -8,14 +8,10 @@ from entities import Object, is_blocked, Fighter
 from ais import ProjectileAI
 from game_map import Tile, Zone
 import utils
+import tables
 
 
 def place_objects(gm, zone):
-    max_monsters = utils.from_dungeon_level(dungeon_level, [[2, 1], [3, 4], [5, 6]])
-    monster_chances = {SCOUT: utils.from_dungeon_level(dungeon_level, SCOUTS_PER_LEVEL),
-                       GUNSHIP: utils.from_dungeon_level(dungeon_level, GUNSHIPS_PER_LEVEL),
-                       POINT_DEFENSE_DESTROYER: utils.from_dungeon_level(dungeon_level, POINT_DEFENSE_DESTROYERS_PER_LEVEL)}
-
     max_items = utils.from_dungeon_level(dungeon_level, [[2, 1], [3, 4]])
     item_chances = {'heal': 35,
                     'lightning': utils.from_dungeon_level(dungeon_level, [[15, 1], [30, 3], [45, 5]]),
@@ -24,13 +20,11 @@ def place_objects(gm, zone):
                     'sword': 25,
                     'shield': 25}  # TODO: Enum?
 
-    num_monsters = 1  # libtcod.random_get_int(0, 0, max_monsters)
-    for _ in range(num_monsters):
+    enemies = tables.choose_encounter_for_level(dungeon_level)
+    for choice in enemies:
         (x, y) = zone.random_coordinates()
 
         if not is_blocked(x, y, gm, objects):
-            choice = utils.random_choice(monster_chances)
-
             if choice == SCOUT:
                 fighter_component = Fighter(player=player, hp=10, defense=0, power=0, xp=30, base_speed=75,
                                             death_function=projectile_death)
@@ -49,6 +43,13 @@ def place_objects(gm, zone):
                 ai_component = PointDefenseDestroyerMonster()
                 monster = Object(x, y, 'P', POINT_DEFENSE_DESTROYER, libtcod.darker_green, blocks=True,
                                  fighter=fighter_component, ai=ai_component)
+            if choice == 'placeholder':
+                print('placeholder encounter')
+                fighter_component = Fighter(player=player, hp=10, defense=0, power=0, xp=30, base_speed=75,
+                                            death_function=projectile_death)
+                ai_component = ScoutMonster()
+                monster = Object(x, y, 'P', 'placeholder', libtcod.darker_green, blocks=True, fighter=fighter_component,
+                                 ai=ai_component)
 
             zone.register_enemy(monster)
             objects.append(monster)
