@@ -217,117 +217,135 @@ def make_game_map():
     return gm
 
 
-class ScoutMonster(object):
+class MonsterAI(object):
+    def __init__(self):
+        self.activated = False
+        self.owner = None
+
+    def is_activated(self):
+        if self.activated:
+            return True
+        elif libtcod.map_is_in_fov(fov_map, self.owner.x, self.owner.y):
+            self.activated = True
+            return True
+        else:
+            return False
+
     def take_turn(self):
-        monster = self.owner
-        if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
-            if monster.distance_to(player) >= 5:
-                monster.move_towards(player.x, player.y, game_map, objects)
+        raise NotImplementedError('Subclass this before usage please.')
+
+
+class ScoutMonster(MonsterAI):
+    def __init__(self):
+        super(ScoutMonster, self).__init__()
+
+    def take_turn(self):
+        if self.is_activated():
+            if self.owner.distance_to(player) >= 5:
+                self.owner.move_towards(player.x, player.y, game_map, objects)
             elif player.fighter.hp > 0:
-                fire_small_shotgun(caster=monster, target=player, spread=2, pellets=3)
+                fire_small_shotgun(caster=self.owner, target=player, spread=2, pellets=3)
 
 
-class FighterMonster(object):
+class FighterMonster(MonsterAI):
+    def __init__(self):
+        super(FighterMonster, self).__init__()
+
     def take_turn(self):
-        monster = self.owner
-        if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
-            monster.move_towards(player.x, player.y, game_map, objects)
+        if self.is_activated():
+            self.owner.move_towards(player.x, player.y, game_map, objects)
             if player.fighter.hp > 0:
-                fire_small_gatling(caster=monster, target=player)
-                fire_small_gatling(caster=monster, target=player)
-                fire_small_gatling(caster=monster, target=player)
+                fire_small_gatling(caster=self.owner, target=player)
+                fire_small_gatling(caster=self.owner, target=player)
+                fire_small_gatling(caster=self.owner, target=player)
 
 
-class GunshipMonster(object):
+class GunshipMonster(MonsterAI):
     def __init__(self, cooldown=4):
+        super(GunshipMonster, self).__init__()
         self.cooldown = cooldown
         self.current_cooldown = 0
         self.move = True
 
     def take_turn(self):
-        monster = self.owner
-
-        if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
-            if self.move and monster.distance_to(player) >= 5:
-                monster.move_towards(player.x, player.y, game_map, objects)
+        if self.is_activated():
+            if self.move and self.owner.distance_to(player) >= 5:
+                self.owner.move_towards(player.x, player.y, game_map, objects)
                 self.move = False
             else:
                 self.move = True
             if self.current_cooldown == 0:
-                fire_small_shotgun(caster=monster, target=player)
+                fire_small_shotgun(caster=self.owner, target=player)
                 self.current_cooldown += self.cooldown
             else:
-                fire_small_cannon(caster=monster, target=player)
+                fire_small_cannon(caster=self.owner, target=player)
         if self.current_cooldown > 0:
             self.current_cooldown -= 1
 
 
-class FrigateMonster(object):
+class FrigateMonster(MonsterAI):
     def __init__(self):
+        super(FrigateMonster, self).__init__()
         self.reverse_cooldown = 3
         self.current_reverse_cooldown = 0
 
     def take_turn(self):
-        monster = self.owner
-
-        if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
-            monster.move_towards(player.x, player.y, game_map, objects)
+        if self.is_activated():
+            self.owner.move_towards(player.x, player.y, game_map, objects)
             if self.current_reverse_cooldown == 0:
-                fire_returning_shot(caster=monster, target=player)
-                fire_small_cannon(caster=monster, target=player)
+                fire_returning_shot(caster=self.owner, target=player)
+                fire_small_cannon(caster=self.owner, target=player)
                 self.current_reverse_cooldown += self.reverse_cooldown
             else:
-                fire_small_cannon(caster=monster, target=player)
-                fire_small_gatling(caster=monster, target=player)
-                fire_small_shotgun(caster=monster, target=player, pellets=2, spread=3)
+                fire_small_cannon(caster=self.owner, target=player)
+                fire_small_gatling(caster=self.owner, target=player)
+                fire_small_shotgun(caster=self.owner, target=player, pellets=2, spread=3)
         if self.current_reverse_cooldown > 0:
             self.current_reverse_cooldown -= 1
 
 
-class DestroyerMonster(object):
+class DestroyerMonster(MonsterAI):
     def __init__(self):
+        super(DestroyerMonster, self).__init__()
         self.volly_cooldown = 5
         self.current_cooldown = 0
 
     def take_turn(self):
-        monster = self.owner
-
-        if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
-            monster.move_towards(player.x, player.y, game_map, objects)
+        if self.is_activated():
+            self.owner.move_towards(player.x, player.y, game_map, objects)
             if self.current_cooldown == 0:
-                fire_small_shotgun(caster=monster, target=player, spread=7, pellets=30)
-                fire_small_cannon(caster=monster, target=player)
+                fire_small_shotgun(caster=self.owner, target=player, spread=7, pellets=30)
+                fire_small_cannon(caster=self.owner, target=player)
                 self.current_cooldown += self.volly_cooldown
             else:
-                fire_small_shotgun(caster=monster, target=player, spread=1, pellets=2)
+                fire_small_shotgun(caster=self.owner, target=player, spread=1, pellets=2)
         if self.current_cooldown > 0:
             self.current_cooldown -= 1
 
 
-class CruiserMonster(object):
+class CruiserMonster(MonsterAI):
     def __init__(self):
+        super(CruiserMonster, self).__init__()
         self.railgun_cooldown = 3
         self.current_railgun_cooldown = 0
         self.flak_cooldown = 10
         self.current_flak_cooldown = 0
 
     def take_turn(self):
-        monster = self.owner
-
-        if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
+        if self.is_activated():
             # Movement
-            if monster.distance_to(player) >= 7:
-                monster.move_towards(player.x, player.y, game_map, objects)
+            if self.owner.distance_to(player) >= 7:
+                self.owner.move_towards(player.x, player.y, game_map, objects)
 
             # Always attempt to fire railgun and cannon complement
-            fire_small_cannon(caster=monster, target=player)
+            fire_small_cannon(caster=self.owner, target=player)
             if self.current_railgun_cooldown == 0:
-                fire_railgun(caster=monster, target=player)
+                fire_railgun(caster=self.owner, target=player)
                 self.current_railgun_cooldown += self.railgun_cooldown
 
             # If the player is too close, flak burst
-            if monster.distance_to(player) <= 4 and self.current_flak_cooldown == 0:
-                fire_small_shotgun(caster=monster, target=player, spread=5, pellets=30)
+            if self.owner.distance_to(player) <= 4 and self.current_flak_cooldown == 0:
+                fire_small_shotgun(caster=self.owner, target=player, spread=5, pellets=30)
                 self.current_flak_cooldown += self.flak_cooldown
 
         if self.current_railgun_cooldown > 0:
@@ -337,37 +355,37 @@ class CruiserMonster(object):
 
 
 # TODO: Make fighters not shoot each other, and path around each other!
-class CarrierMonster(object):
+class CarrierMonster(MonsterAI):
     def __init__(self):
+        super(CarrierMonster, self).__init__()
         self.launch_table = {SCOUT: 5,
                              FIGHTER: 10}
         self.flak_cooldown = 10
         self.current_flak_cooldown = 0
 
     def take_turn(self):
-        monster = self.owner
-        if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
+        if self.is_activated():
             # Launch
             choice = utils.random_choice(self.launch_table)
             # TODO: Use pathfinding here! Otherwise you can spawn into a blocked square!
-            (x, y) = LinePath(monster.x, monster.y, player.x, player.y).project(1)[0]
+            (x, y) = LinePath(self.owner.x, self.owner.y, player.x, player.y).project(1)[0]
             if choice == SCOUT:
                 fighter_component = Fighter(player=player, hp=10, defense=0, power=0, xp=30, base_speed=75,
                                             death_function=projectile_death)
                 ai_component = ScoutMonster()
-                monster = Object(x, y, 'S', SCOUT, libtcod.darker_green, blocks=True,
-                                 fighter=fighter_component, ai=ai_component)
+                self.owner = Object(x, y, 'S', SCOUT, libtcod.darker_green, blocks=True, fighter=fighter_component,
+                                    ai=ai_component)
             elif choice == FIGHTER:
                 fighter_component = Fighter(player=player, hp=30, defense=0, power=0, xp=50, base_speed=125,
                                             death_function=projectile_death)
                 ai_component = FighterMonster()
-                monster = Object(x, y, 'F', FIGHTER, libtcod.darker_green, blocks=True,
+                self.owner = Object(x, y, 'F', FIGHTER, libtcod.darker_green, blocks=True,
                                  fighter=fighter_component, ai=ai_component)
-            objects.append(monster)
+            objects.append(self.owner)
 
             # If the player is too close, flak burst
-            if monster.distance_to(player) <= 4 and self.current_flak_cooldown == 0:
-                fire_small_shotgun(caster=monster, target=player, spread=5, pellets=30)
+            if self.owner.distance_to(player) <= 4 and self.current_flak_cooldown == 0:
+                fire_small_shotgun(caster=self.owner, target=player, spread=5, pellets=30)
                 self.current_flak_cooldown += self.flak_cooldown
 
         if self.current_flak_cooldown > 0:
