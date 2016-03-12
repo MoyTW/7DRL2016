@@ -64,4 +64,5 @@ SCOUT = 'scout'
 FIGHTER = 'fighter'
 GUNSHIP = 'gunship'
 FRIGATE = 'frigate'
-POINT_DEFENSE_DESTROYER = 'point defense destroyer'
+DESTROYER = 'destroyer'
+

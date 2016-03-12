@@ -52,11 +52,11 @@ def place_objects(gm, zone, safe=False):
                 ai_component = FrigateMonster()
                 monster = Object(x, y, 'R', FRIGATE, libtcod.darker_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
-            elif choice == POINT_DEFENSE_DESTROYER:
-                fighter_component = Fighter(player=player, hp=200, defense=10, power=0, xp=500, base_speed=300,
+            elif choice == DESTROYER:
+                fighter_component = Fighter(player=player, hp=200, defense=15, power=0, xp=500, base_speed=300,
                                             death_function=monster_death)
-                ai_component = PointDefenseDestroyerMonster()
-                monster = Object(x, y, 'P', POINT_DEFENSE_DESTROYER, libtcod.darker_green, blocks=True,
+                ai_component = DestroyerMonster()
+                monster = Object(x, y, 'D', DESTROYER, libtcod.darker_green, blocks=True,
                                  fighter=fighter_component, ai=ai_component)
             if choice == 'placeholder':
                 print('placeholder encounter')
@@ -258,7 +258,8 @@ class FrigateMonster(object):
         if self.current_reverse_cooldown > 0:
             self.current_reverse_cooldown -= 1
 
-class PointDefenseDestroyerMonster(object):
+
+class DestroyerMonster(object):
     def __init__(self):
         self.volly_cooldown = 5
         self.current_cooldown = 0
