@@ -2,6 +2,7 @@
 GAME_STATE_DIDNT_TAKE_TURN = 'gs-didnt-take-turn'
 GAME_STATE_PLAYER_DEAD = 'gs-dead'
 GAME_STATE_PLAYING = 'gs-playing'
+GAME_STATE_VICTORY = 'gs-victory'
 
 ACTION_CANCELLED = 'cancelled'
 
@@ -67,3 +68,4 @@ FRIGATE = 'frigate'
 DESTROYER = 'destroyer'
 CRUISER = 'cruiser'
 CARRIER = 'carrier'
+DIPLOMAT = 'diplomat'

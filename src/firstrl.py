@@ -176,6 +176,16 @@ def make_game_map():
 
             zones.append(new_zone)
 
+    # If you're on the last level, generate the diplomat
+    if dungeon_level == 10:
+        (diplomat_x, diplomat_y) = zones[0].random_unblocked_coordinates(gm, objects)
+        fighter_component = Fighter(player=player, hp=10, defense=0, power=0, xp=0, base_speed=50,
+                                    death_function=diplomat_death)
+        ai_component = DiplomatMonster()
+        diplomat = Object(diplomat_x, diplomat_y, 'D', DIPLOMAT, libtcod.darker_green, blocks=True, fighter=fighter_component,
+                          ai=ai_component)
+        objects.append(diplomat)
+
     # Generate the stairs
     stairs_zone = zones[libtcod.random_get_int(0, 1, len(zones) - 1)]
     (stairs_x, stairs_y) = stairs_zone.random_unblocked_coordinates(gm, objects)
@@ -361,6 +371,14 @@ class CarrierMonster(object):
 
         if self.current_flak_cooldown > 0:
             self.current_flak_cooldown -= 1
+
+
+class DiplomatMonster(object):
+    def take_turn(self):
+        monster = self.owner
+
+        if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
+            message('Please do not attack! We are a peaceful diplomatic vessel!', libtcod.light_violet)
 
 
 class ConfusedMonster(object):
@@ -645,6 +663,13 @@ def monster_death(monster):
 
 def projectile_death(projectile):
     objects.remove(projectile)
+
+
+def diplomat_death(diplomat):
+    global game_state
+    msgbox("You have assassinated the diplomat! You have won the game, congratulations!\n\n"
+           "Press any key to exit.")
+    game_state = GAME_STATE_VICTORY
 
 
 def target_tile(max_range=None):
@@ -933,6 +958,9 @@ def play_game():
     key = libtcod.Key()
 
     while not libtcod.console_is_window_closed():
+        if game_state == GAME_STATE_VICTORY:
+            break
+
         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
         libtcod.console_set_default_foreground(0, libtcod.white)
 
