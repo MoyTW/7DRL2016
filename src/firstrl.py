@@ -64,6 +64,13 @@ def place_objects(gm, zone, safe=False):
                 ai_component = CruiserMonster()
                 monster = Object(x, y, 'C', CRUISER, libtcod.darker_green, blocks=True,
                                  fighter=fighter_component, ai=ai_component)
+            elif choice == CARRIER:
+                fighter_component = Fighter(player=player, hp=500, defense=0, power=0, xp=2000, base_speed=200,
+                                            death_function=monster_death)
+                ai_component = CarrierMonster()
+                monster = Object(x, y, 'A', CARRIER, libtcod.darker_green, blocks=True,
+                                 fighter=fighter_component, ai=ai_component)
+
 
             if choice == 'placeholder':
                 print('placeholder encounter')
@@ -297,8 +304,6 @@ class CruiserMonster(object):
         monster = self.owner
 
         if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
-
-
             # Movement
             if monster.distance_to(player) >= 7:
                 monster.move_towards(player.x, player.y, game_map, objects)
@@ -316,6 +321,44 @@ class CruiserMonster(object):
 
         if self.current_railgun_cooldown > 0:
             self.current_railgun_cooldown -= 1
+        if self.current_flak_cooldown > 0:
+            self.current_flak_cooldown -= 1
+
+
+# TODO: Make fighters not shoot each other, and path around each other!
+class CarrierMonster(object):
+    def __init__(self):
+        self.launch_table = {SCOUT: 5,
+                             FIGHTER: 10}
+        self.flak_cooldown = 10
+        self.current_flak_cooldown = 0
+
+    def take_turn(self):
+        monster = self.owner
+        if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
+            # Launch
+            choice = utils.random_choice(self.launch_table)
+            # TODO: Use pathfinding here! Otherwise you can spawn into a blocked square!
+            (x, y) = LinePath(monster.x, monster.y, player.x, player.y).project(1)[0]
+            if choice == SCOUT:
+                fighter_component = Fighter(player=player, hp=10, defense=0, power=0, xp=30, base_speed=75,
+                                            death_function=projectile_death)
+                ai_component = ScoutMonster()
+                monster = Object(x, y, 'S', SCOUT, libtcod.darker_green, blocks=True,
+                                 fighter=fighter_component, ai=ai_component)
+            elif choice == FIGHTER:
+                fighter_component = Fighter(player=player, hp=30, defense=0, power=0, xp=50, base_speed=125,
+                                            death_function=projectile_death)
+                ai_component = FighterMonster()
+                monster = Object(x, y, 'F', FIGHTER, libtcod.darker_green, blocks=True,
+                                 fighter=fighter_component, ai=ai_component)
+            objects.append(monster)
+
+            # If the player is too close, flak burst
+            if monster.distance_to(player) <= 4 and self.current_flak_cooldown == 0:
+                fire_small_shotgun(caster=monster, target=player, spread=5, pellets=30)
+                self.current_flak_cooldown += self.flak_cooldown
+
         if self.current_flak_cooldown > 0:
             self.current_flak_cooldown -= 1
 

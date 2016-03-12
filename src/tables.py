@@ -23,6 +23,7 @@ GUNSHIP_PAIR_ENCOUNTER = 'gunship pair encounter'
 FRIGATE_ENCOUNTER = 'frigate encounter'
 DESTROYER_ENCOUNTER = 'destroyer encounter'
 CRUISER_ENCOUNTER = 'cruiser encounter'
+CARRIER_ENCOUNTER = 'carrier encounter'
 
 PLACEHOLDER_ENCOUNTER = 'placeholder'
 
@@ -40,6 +41,7 @@ encounters_to_ship_lists = {
     FRIGATE_ENCOUNTER: [FRIGATE],
     DESTROYER_ENCOUNTER: [DESTROYER],
     CRUISER_ENCOUNTER: [CRUISER],
+    CARRIER_ENCOUNTER: [CARRIER],
     PLACEHOLDER_ENCOUNTER: ['placeholder']
 }
 
