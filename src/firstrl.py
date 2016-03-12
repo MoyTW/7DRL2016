@@ -725,7 +725,7 @@ def fire_railgun(caster, target):
 def fire_returning_shot(caster, target):
     fighter_component = Fighter(player=player, hp=1, defense=0, power=2, xp=0, base_speed=33,
                                 death_function=projectile_death)
-    path = ReversePath(caster.x, caster.y, target.x, target.y)
+    path = ReversePath(caster.x, caster.y, target.x, target.y, overshoot=4)
     ai_component = ProjectileAI(path, game_map, objects)
     projectile = Object(caster.x, caster.y, 'r', 'reverser shot', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)

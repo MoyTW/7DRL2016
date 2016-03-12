@@ -63,20 +63,37 @@ class LinePath(Path):
             self.error += self.d_error
             return self.x, self.y
 
+    def at_end(self):
+        return self.x == self.x1 and self.y == self.y1
+
+    def length(self):
+        mirror_path = copy.deepcopy(self)  # TODO: Kinda nasty, but DEADLINES!
+        steps = 0
+        while not mirror_path.at_end():
+            mirror_path.step()
+            steps += 1
+        print(steps)
+        return steps
+
 
 class ReversePath(Path):
-    def __init__(self, x0, y0, x1, y1):
+    def __init__(self, x0, y0, x1, y1, overshoot=0):
         super(ReversePath, self).__init__(x0, y0)
-        self.straight_segment = LinePath(x0, y0, x1, y1)
-        self.x1 = x1
-        self.y1 = y1
-        self.reverse_segment = LinePath(x1, y1, x0, y0)
+
+        # TODO: This overshoot code is super gnarly!
+        measure_segment = LinePath(x0, y0, x1, y1)
+        distance = measure_segment.length()
+        projected = measure_segment.project(distance + overshoot)
+        (self.end_x, self.end_y) = projected[-1]
+
+        self.straight_segment = LinePath(x0, y0, self.end_x, self.end_y)
+        self.reverse_segment = LinePath(self.end_x, self.end_y, x0, y0)
         self.has_reversed = False
 
     def step(self):
         if not self.has_reversed:
             (self.x, self.y) = self.straight_segment.step()
-            if self.x == self.x1 and self.y == self.y1:
+            if self.x == self.end_x and self.y == self.end_y:
                 self.has_reversed = True
             return self.x, self.y
         else:
