@@ -671,7 +671,8 @@ def player_death(_):
 
 
 def monster_death(monster):
-    message(monster.name.capitalize() + ' is dead! You gain ' + str(monster.fighter.xp) + ' xp!', libtcod.red)
+    message(monster.name.capitalize() + ' has been destroyed! You gain ' + str(monster.fighter.xp) + ' xp!',
+            libtcod.red)
     objects.remove(monster)
 
 
@@ -785,7 +786,7 @@ def fire_railgun(caster, target):
     fighter_component = Fighter(player=player, hp=1, defense=0, power=15, xp=0, base_speed=20,
                                 death_function=projectile_death)
     path = LinePath(caster.x, caster.y, target.x, target.y)
-    ai_component = ProjectileAI(path, game_map, objects)
+    ai_component = ProjectileAI(path, game_map, objects, message)
     projectile = Object(caster.x, caster.y, 'l', 'railgun slug', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
     objects.append(projectile)
@@ -796,7 +797,7 @@ def fire_returning_shot(caster, target):
     fighter_component = Fighter(player=player, hp=1, defense=0, power=2, xp=0, base_speed=33,
                                 death_function=projectile_death)
     path = ReversePath(caster.x, caster.y, target.x, target.y, overshoot=4)
-    ai_component = ProjectileAI(path, game_map, objects)
+    ai_component = ProjectileAI(path, game_map, objects, message)
     projectile = Object(caster.x, caster.y, 'r', 'reverser shot', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
     objects.append(projectile)
@@ -807,7 +808,7 @@ def single_small_shotgun(source_x, source_y, target_x, target_y):
     fighter_component = Fighter(player=player, hp=1, defense=0, power=1, xp=0, base_speed=25,
                                 death_function=projectile_death)
     path = LinePath(source_x, source_y, target_x, target_y)
-    ai_component = ProjectileAI(path, game_map, objects)
+    ai_component = ProjectileAI(path, game_map, objects, message)
     projectile = Object(source_x, source_y, 's', 'small shotgun shell', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
     objects.append(projectile)
@@ -825,7 +826,7 @@ def fire_small_gatling(caster, target):
     fighter_component = Fighter(player=player, hp=1, defense=0, power=2, xp=0, base_speed=50,
                                 death_function=projectile_death)
     path = LinePath(caster.x, caster.y, target.x, target.y)
-    ai_component = ProjectileAI(path, game_map, objects)
+    ai_component = ProjectileAI(path, game_map, objects, message)
     projectile = Object(caster.x, caster.y, 'g', 'small gatling shell', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
     objects.append(projectile)
@@ -836,7 +837,7 @@ def fire_small_cannon(caster, target):
     fighter_component = Fighter(player=player, hp=1, defense=0, power=5, xp=0, base_speed=50,
                                 death_function=projectile_death)
     path = LinePath(caster.x, caster.y, target.x, target.y)
-    ai_component = ProjectileAI(path, game_map, objects)
+    ai_component = ProjectileAI(path, game_map, objects, message)
     projectile = Object(caster.x, caster.y, 'c', 'small cannon shell', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
     objects.append(projectile)
@@ -847,8 +848,8 @@ def fire_cutting_laser(caster, target):
     fighter_component = Fighter(player=player, hp=1, defense=0, power=player.fighter.power, xp=0, base_speed=1,
                                 death_function=projectile_death)
     path = LinePath(caster.x, caster.y, target.x, target.y)
-    ai_component = ProjectileAI(path, game_map, objects)
-    projectile = Object(caster.x, caster.y, '*', 'cutting laser beam', libtcod.red, blocks=False, is_projectile=True,
+    ai_component = ProjectileAI(path, game_map, objects, message)
+    projectile = Object(caster.x, caster.y, '*', 'cutting beam', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
     objects.append(projectile)
     projectile.send_to_back(objects)
@@ -878,7 +879,7 @@ def new_game():
     # Though to be fair it is a 7-day thing so you...probably won't, as much as it hurts to admit it.
     player_fighter = Fighter(player=None, hp=30, defense=0, power=25, xp=0, death_function=player_death,
                              inventory=inventory)
-    player = Object(0, 0, '@', 'player', libtcod.white, blocks=True, fighter=player_fighter)
+    player = Object(0, 0, '@', 'player', libtcod.white, blocks=True, is_player=True, fighter=player_fighter)
     player.fighter.player = player
 
     # TODO: Don't just add random properties that's silly.

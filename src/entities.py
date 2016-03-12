@@ -13,8 +13,8 @@ def is_blocked(x, y, _game_map, _objects):
 
 
 class Object(object):
-    def __init__(self, x, y, char, name, color, blocks=False, always_visible=False, is_projectile=False, fighter=None,
-                 ai=None, item=None, equipment=None):
+    def __init__(self, x, y, char, name, color, blocks=False, always_visible=False, is_projectile=False,
+                 is_player=False, fighter=None, ai=None, item=None, equipment=None):
         self.x = x
         self.y = y
         self.char = char
@@ -23,6 +23,7 @@ class Object(object):
         self.blocks = blocks
         self.always_visible = always_visible
         self.is_projectile = is_projectile
+        self.is_player = is_player
 
         self.fighter = fighter
         if self.fighter:
@@ -143,12 +144,8 @@ class Fighter(object):
     def attack(self, target):
         damage = self.power - target.fighter.defense
         if damage > 0:
-            # message(self.owner.name.capitalize() + ' attacks ' + target.name + ' for ' + str(damage), libtcod.yellow)
             target.fighter.take_damage(damage)
-        else:
-            pass
-            # message(self.owner.name.capitalize() +
-            # ' attacks ' + target.name + ' but it does no damage', libtcod.green)
+        return damage
 
     def take_damage(self, damage):
         if damage > 0:
