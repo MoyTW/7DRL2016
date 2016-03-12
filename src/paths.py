@@ -72,7 +72,6 @@ class LinePath(Path):
         while not mirror_path.at_end():
             mirror_path.step()
             steps += 1
-        print(steps)
         return steps
 
 
