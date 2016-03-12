@@ -614,7 +614,7 @@ def handle_keys():
                 msgbox('Character Information\n\nLevel: ' + str(player.level) + '\nExperience: ' +
                        str(player.fighter.xp) + '\nExperience to level up: ' + str(level_up_xp) + '\n\nMaximum HP: ' +
                        str(player.fighter.max_hp) + '\nAttack: ' + str(player.fighter.power) + '\nDefense: ' +
-                       str(player.fighter.defense),
+                       str(player.fighter.defense) + '\nSpeed: ' + str(player.fighter.speed),
                        CHARACTER_SCREEN_WIDTH)
             elif key_char == 'r':
                 zone_summaries = map(lambda z: z.summary, zones)
