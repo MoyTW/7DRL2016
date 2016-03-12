@@ -934,8 +934,6 @@ def play_game():
 
         libtcod.console_flush()
 
-        check_level_up()
-
         renderer.clear_objects(con, objects)
 
         if tutorial:
@@ -978,6 +976,8 @@ def play_game():
                 if o.fighter and o.fighter.time_until_turn == 0 and o.ai:
                     o.ai.take_turn()
                     o.fighter.end_turn()
+
+        check_level_up()
 
 
 def main_menu():
