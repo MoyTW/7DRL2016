@@ -46,14 +46,11 @@ class Object(object):
         new_x = self.x + dx
         new_y = self.y + dy
         blocked = is_blocked(new_x, new_y, game_map, objects)
-        # SCOPING DEAR OH GOD WHY FIX THIS AFTER THE TUTORIAL
         if not blocked:
             self.x += dx
             self.y += dy
         return blocked
 
-    # TODO: Pull AI logic out of base Object class!
-    # TODO: Take other instead of x/y!
     def move_towards(self, target_x, target_y, game_map, objects):
         dx = target_x - self.x
         dy = target_y - self.y
@@ -62,6 +59,13 @@ class Object(object):
         dx = int(round(dx / distance))
         dy = int(round(dy / distance))
         return self.move(dx, dy, game_map, objects)
+
+    def path_towards(self, target_x, target_y, game_map, objects, fov_map):
+        path = libtcod.path_new_using_map(fov_map)
+        libtcod.path_compute(path, self.x, self.y, target_x, target_y)
+        (x, y) = libtcod.path_walk(path, False)
+        if x is not None:
+            self.move_towards(x, y, game_map, objects)
 
     def distance_to(self, other):
         dx = other.x - self.x

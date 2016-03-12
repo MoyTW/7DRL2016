@@ -242,7 +242,7 @@ class ScoutMonster(MonsterAI):
     def take_turn(self):
         if self.is_activated():
             if self.owner.distance_to(player) >= 5:
-                self.owner.move_towards(player.x, player.y, game_map, objects)
+                self.owner.path_towards(player.x, player.y, game_map, objects, fov_map)
             elif player.fighter.hp > 0:
                 fire_small_shotgun(caster=self.owner, target=player, spread=2, pellets=3)
 
@@ -253,7 +253,7 @@ class FighterMonster(MonsterAI):
 
     def take_turn(self):
         if self.is_activated():
-            self.owner.move_towards(player.x, player.y, game_map, objects)
+            self.owner.path_towards(player.x, player.y, game_map, objects, fov_map)
             if player.fighter.hp > 0:
                 fire_small_gatling(caster=self.owner, target=player)
                 fire_small_gatling(caster=self.owner, target=player)
@@ -270,7 +270,7 @@ class GunshipMonster(MonsterAI):
     def take_turn(self):
         if self.is_activated():
             if self.move and self.owner.distance_to(player) >= 5:
-                self.owner.move_towards(player.x, player.y, game_map, objects)
+                self.owner.path_towards(player.x, player.y, game_map, objects, fov_map)
                 self.move = False
             else:
                 self.move = True
@@ -291,7 +291,7 @@ class FrigateMonster(MonsterAI):
 
     def take_turn(self):
         if self.is_activated():
-            self.owner.move_towards(player.x, player.y, game_map, objects)
+            self.owner.path_towards(player.x, player.y, game_map, objects, fov_map)
             if self.current_reverse_cooldown == 0:
                 fire_returning_shot(caster=self.owner, target=player)
                 fire_small_cannon(caster=self.owner, target=player)
@@ -312,7 +312,8 @@ class DestroyerMonster(MonsterAI):
 
     def take_turn(self):
         if self.is_activated():
-            self.owner.move_towards(player.x, player.y, game_map, objects)
+            self.owner.path_towards(player.x, player.y, game_map, objects, fov_map)
+
             if self.current_cooldown == 0:
                 fire_small_shotgun(caster=self.owner, target=player, spread=7, pellets=30)
                 fire_small_cannon(caster=self.owner, target=player)
@@ -335,7 +336,7 @@ class CruiserMonster(MonsterAI):
         if self.is_activated():
             # Movement
             if self.owner.distance_to(player) >= 7:
-                self.owner.move_towards(player.x, player.y, game_map, objects)
+                self.owner.path_towards(player.x, player.y, game_map, objects, fov_map)
 
             # Always attempt to fire railgun and cannon complement
             fire_small_cannon(caster=self.owner, target=player)
