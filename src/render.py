@@ -145,7 +145,9 @@ def render_all(fov_recompute, player, objects, fov_map, game_map, con, panel, ga
     # print bars
     render_bar(panel, 1, 1, BAR_WIDTH, 'HP', player.fighter.hp, player.fighter.max_hp, libtcod.light_red,
                libtcod.darker_red)
-    libtcod.console_print_ex(panel, 1, 3, libtcod.BKGND_NONE, libtcod.LEFT, 'Dungeon level: ' + str(dungeon_level))
+    libtcod.console_print_ex(panel, 1, 3, libtcod.BKGND_NONE, libtcod.LEFT, 'Sector: ' + str(dungeon_level))
+    libtcod.console_print_ex(panel, 1, 4, libtcod.BKGND_NONE, libtcod.LEFT,
+                             'Position: (' + str(player.x) + ',' + str(player.y) + ')')
 
     # print mouselook
     libtcod.console_set_default_foreground(panel, libtcod.light_grey)
