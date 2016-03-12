@@ -15,10 +15,7 @@ def place_objects(gm, zone, safe=False):
     max_items = utils.from_dungeon_level(dungeon_level, [[2, 1], [3, 4]])
     item_chances = {'heal': 35,
                     'lightning': utils.from_dungeon_level(dungeon_level, [[15, 1], [30, 3], [45, 5]]),
-                    'fireball': utils.from_dungeon_level(dungeon_level, [[5, 2], [25, 5]]),
-                    'confuse': utils.from_dungeon_level(dungeon_level, [[5, 3], [25, 6]]),
-                    'sword': 25,
-                    'shield': 25}  # TODO: Enum?
+                    'confuse': utils.from_dungeon_level(dungeon_level, [[5, 3], [25, 6]])}  # TODO: Enum?
 
     if not safe:
         enemies = tables.choose_encounter_for_level(dungeon_level)
@@ -70,9 +67,7 @@ def place_objects(gm, zone, safe=False):
                 ai_component = CarrierMonster()
                 monster = Object(x, y, 'A', CARRIER, libtcod.darker_green, blocks=True,
                                  fighter=fighter_component, ai=ai_component)
-
-
-            if choice == 'placeholder':
+            elif choice == 'placeholder':
                 print('placeholder encounter')
                 fighter_component = Fighter(player=player, hp=10, defense=0, power=0, xp=30, base_speed=75,
                                             death_function=projectile_death)
@@ -98,19 +93,10 @@ def place_objects(gm, zone, safe=False):
                 item_component = Item(use_function=cast_lightning)
                 item = Object(x, y, '#', 'scroll of lightning bolt', libtcod.light_yellow, always_visible=True,
                               item=item_component)
-            elif choice == 'fireball':
-                item_component = Item(use_function=cast_fireball)
-                item = Object(x, y, '#', 'scroll of fireball', libtcod.orange, always_visible=True, item=item_component)
             elif choice == 'confuse':
                 item_component = Item(use_function=cast_confuse)
                 item = Object(x, y, '#', 'scroll of confuse', libtcod.light_blue, always_visible=True,
                               item=item_component)
-            elif choice == 'sword':
-                equipment_component = Equipment(slot=SLOT_RIGHT_HAND, power_bonus=3)
-                item = Object(x, y, '/', 'sword', libtcod.sky, equipment=equipment_component, item=Item())
-            elif choice == 'shield':
-                equipment_component = Equipment(slot=SLOT_LEFT_HAND, defense_bonus=1)
-                item = Object(x, y, '[', 'shield', libtcod.sky, equipment=equipment_component, item=Item())
 
             objects.append(item)
             zone.register_item(item)
@@ -121,7 +107,8 @@ def place_objects(gm, zone, safe=False):
         (x, y) = zone.random_coordinates()
 
         if not is_blocked(x, y, gm, objects):
-            fighter_component = Fighter(player=player, hp=1, defense=9999, power=0, xp=0, death_function=projectile_death)
+            fighter_component = Fighter(player=player, hp=1, defense=9999, power=0, xp=0,
+                                        death_function=projectile_death)
             monster = Object(x, y, '#', 'satellite', libtcod.white, blocks=True, fighter=fighter_component)
             objects.append(monster)
             # TODO: Hack!
@@ -758,20 +745,6 @@ def cast_lightning():
     monster.fighter.take_damage(LIGHTNING_DAMAGE)
 
 
-def cast_fireball():
-    message('Left-click a tile to target the Fireball spell, ESC/right-click to cancel.', libtcod.orange)
-    (x, y) = target_tile()
-    if x is None:
-        message('Fireball targeting cancelled.', libtcod.orange)
-        return ACTION_CANCELLED
-    message('Fireball at (' + str(x) + ',' + str(y) + ') with radius ' + str(FIREBALL_RADIUS) + '.')
-
-    for obj in objects:
-        if obj.distance(x, y) <= FIREBALL_RADIUS and obj.fighter:
-            message('The ' + obj.name + ' takes ' + str(FIREBALL_DAMAGE) + ' damage from the fireball.', libtcod.orange)
-            obj.fighter.take_damage(FIREBALL_DAMAGE)
-
-
 def cast_confuse():
     message('Left-click on the confuse target, ESC/right-click to cancel.', libtcod.light_blue)
     monster = target_monster(CONFUSE_RANGE)
@@ -894,13 +867,6 @@ def new_game():
 
     game_msgs = []
     message('Good luck, captain! Remember to not die!')
-
-    # Initial equipment
-#    equipment_component = Equipment(slot='right hand', power_bonus=2)
-#    obj = Object(0, 0, '-', 'dagger', libtcod.sky, equipment=equipment_component, item=Item())
-#    inventory.append(obj)
-#    equipment_component.equip()
-#    obj.always_visible = True
 
 
 def next_level():
