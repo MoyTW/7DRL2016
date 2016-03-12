@@ -84,7 +84,7 @@ def place_objects(gm, zone, safe=False):
             objects.append(monster)
 
     # Place items
-    num_items = libtcod.random_get_int(0, 0, max_items)
+    num_items = 0 # libtcod.random_get_int(0, 0, max_items)
     for _ in range(num_items):
         (x, y) = zone.random_coordinates()
 
