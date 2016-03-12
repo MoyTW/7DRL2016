@@ -637,7 +637,7 @@ def check_level_up():
             player.fighter.base_max_hp += 20
             player.fighter.hp += 20
         elif choice == 1:
-            player.fighter.base_power += 1
+            player.fighter.base_power += 5
         elif choice == 2:
             player.fighter.base_defense += 1
 
@@ -825,7 +825,7 @@ def fire_small_cannon(caster, target):
 
 
 def fire_cutting_laser(caster, target):
-    fighter_component = Fighter(player=player, hp=1, defense=0, power=25, xp=0, base_speed=1,
+    fighter_component = Fighter(player=player, hp=1, defense=0, power=player.fighter.power, xp=0, base_speed=1,
                                 death_function=projectile_death)
     path = LinePath(caster.x, caster.y, target.x, target.y)
     ai_component = ProjectileAI(path, game_map, objects)
@@ -857,7 +857,7 @@ def new_game():
     # TODO: Hahaha that's a terrible kludge here, creating the fighter and then setting the player to it later!
     # TODO: Seriously this is terrible and The Worst. If you have time fix it please.
     # Though to be fair it is a 7-day thing so you...probably won't, as much as it hurts to admit it.
-    player_fighter = Fighter(player=None, hp=30, defense=0, power=10, xp=0, death_function=player_death,
+    player_fighter = Fighter(player=None, hp=30, defense=0, power=25, xp=0, death_function=player_death,
                              inventory=inventory)
     player = Object(0, 0, '@', 'player', libtcod.white, blocks=True, fighter=player_fighter)
     player.fighter.player = player
