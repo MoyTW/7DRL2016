@@ -65,4 +65,4 @@ FIGHTER = 'fighter'
 GUNSHIP = 'gunship'
 FRIGATE = 'frigate'
 DESTROYER = 'destroyer'
-
+CRUISER = 'cruiser'

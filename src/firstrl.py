@@ -58,6 +58,13 @@ def place_objects(gm, zone, safe=False):
                 ai_component = DestroyerMonster()
                 monster = Object(x, y, 'D', DESTROYER, libtcod.darker_green, blocks=True,
                                  fighter=fighter_component, ai=ai_component)
+            elif choice == CRUISER:
+                fighter_component = Fighter(player=player, hp=300, defense=10, power=0, xp=1000, base_speed=400,
+                                            death_function=monster_death)
+                ai_component = CruiserMonster()
+                monster = Object(x, y, 'C', CRUISER, libtcod.darker_green, blocks=True,
+                                 fighter=fighter_component, ai=ai_component)
+
             if choice == 'placeholder':
                 print('placeholder encounter')
                 fighter_component = Fighter(player=player, hp=10, defense=0, power=0, xp=30, base_speed=75,
@@ -277,6 +284,40 @@ class DestroyerMonster(object):
                 fire_small_shotgun(caster=monster, target=player, spread=1, pellets=2)
         if self.current_cooldown > 0:
             self.current_cooldown -= 1
+
+
+class CruiserMonster(object):
+    def __init__(self):
+        self.railgun_cooldown = 3
+        self.current_railgun_cooldown = 0
+        self.flak_cooldown = 10
+        self.current_flak_cooldown = 0
+
+    def take_turn(self):
+        monster = self.owner
+
+        if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
+
+
+            # Movement
+            if monster.distance_to(player) >= 7:
+                monster.move_towards(player.x, player.y, game_map, objects)
+
+            # Always attempt to fire railgun and cannon complement
+            fire_small_cannon(caster=monster, target=player)
+            if self.current_railgun_cooldown == 0:
+                fire_railgun(caster=monster, target=player)
+                self.current_railgun_cooldown += self.railgun_cooldown
+
+            # If the player is too close, flak burst
+            if monster.distance_to(player) <= 4 and self.current_flak_cooldown == 0:
+                fire_small_shotgun(caster=monster, target=player, spread=5, pellets=30)
+                self.current_flak_cooldown += self.flak_cooldown
+
+        if self.current_railgun_cooldown > 0:
+            self.current_railgun_cooldown -= 1
+        if self.current_flak_cooldown > 0:
+            self.current_flak_cooldown -= 1
 
 
 class ConfusedMonster(object):
@@ -668,6 +709,17 @@ def cast_confuse():
     monster.ai = ConfusedMonster(old_ai)
     monster.ai.owner = monster
     message('Confused ' + monster.name + '!', libtcod.light_blue)
+
+
+def fire_railgun(caster, target):
+    fighter_component = Fighter(player=player, hp=1, defense=0, power=15, xp=0, base_speed=20,
+                                death_function=projectile_death)
+    path = LinePath(caster.x, caster.y, target.x, target.y)
+    ai_component = ProjectileAI(path, game_map, objects)
+    projectile = Object(caster.x, caster.y, 'l', 'railgun slug', libtcod.red, blocks=False, is_projectile=True,
+                        fighter=fighter_component, ai=ai_component)
+    objects.append(projectile)
+    projectile.send_to_back(objects)
 
 
 def fire_returning_shot(caster, target):
