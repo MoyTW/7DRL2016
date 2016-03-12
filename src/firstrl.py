@@ -663,11 +663,14 @@ def check_level_up():
 
 def player_death(_):
     global game_state
-    message('You died!', libtcod.red)
+    message('You have perished!', libtcod.red)
     game_state = GAME_STATE_PLAYER_DEAD
 
     player.char = '%'
     player.color = libtcod.dark_red
+    msgbox("Oh no! Our last hope has perished to the Earthlings! We are doomed! DOOMED!\n\n"
+           "What's that you say? We dug up another skiff in subhanger 8392? There's hope yet! Prime it for launch and "
+           "find me a new captain!")
 
 
 def monster_death(monster):
@@ -943,7 +946,7 @@ def play_game():
     tutorial = True
 
     while not libtcod.console_is_window_closed():
-        if game_state == GAME_STATE_VICTORY:
+        if game_state == GAME_STATE_VICTORY or game_state == GAME_STATE_PLAYER_DEAD:
             break
 
         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
