@@ -114,7 +114,7 @@ class Fighter(object):
         self.base_power = power
         self.xp = xp
         self.base_speed = base_speed
-        self.time_until_turn = self.speed
+        self._time_until_turn = self.speed
         self.death_function = death_function
         self.inventory = inventory
 
@@ -138,8 +138,15 @@ class Fighter(object):
     def speed(self):
         return self.base_speed
 
+    @property
+    def time_until_turn(self):
+        return self._time_until_turn
+
+    def pass_time(self, time):
+        self._time_until_turn -= time
+
     def end_turn(self):
-        self.time_until_turn = self.speed
+        self._time_until_turn = self.speed
 
     def attack(self, target):
         damage = self.power - target.fighter.defense

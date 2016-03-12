@@ -949,7 +949,7 @@ def play_game():
         time = time_to_next_event(objects)
         for obj in objects:
             if obj.fighter and (obj.ai or obj == player):
-                obj.fighter.time_until_turn -= time
+                obj.fighter.pass_time(time)
 
         if player.fighter.time_until_turn == 0:
             check_level_up()
