@@ -27,8 +27,23 @@ class Zone(object):
         self.y2 = y + h
         self.name = 'Zone ' + str(name)
 
-        self.enemies = []
-        self.items = []
+        self._enemies = []
+        self._items = []
+
+        self._finalized = False
+        self.summary = self._build_summary()
+
+    def _build_summary(self):
+        (x, y) = self.center()
+        top_line = self.name + ': (' + str(x) + ',' + str(y) + ')'
+
+        item_names = map(lambda i: i.name, self._items)
+        item_line = 'Items: ' + ','.join(item_names)
+
+        enemy_names = map(lambda e: e.name, self._enemies)
+        enemy_line = 'Enemies: ' + ','.join(enemy_names)
+
+        return top_line + '\n' + enemy_line + '\n' + item_line + '\n'
 
     def center(self):
         return (self.x1 + self.x2) / 2, (self.y1 + self.y2) / 2
@@ -36,17 +51,24 @@ class Zone(object):
     def intersect(self, other):
         return self.x1 <= other.x2 and self.x2 >= other.x1 and self.y1 <= other.y2 and self.y2 >= other.y1
 
-    def summary(self):
-        (x, y) = self.center()
-        top_line = self.name + ': (' + str(x) + ',' + str(y) + ')'
+    def register_enemy(self, enemy):
+        if not self._finalized:
+            self._enemies.append(enemy)
+        else:
+            raise ValueError('Attempted to register enemy with finalized zone')
 
-        item_names = map(lambda i: i.name, self.items)
-        item_line = 'Items: ' + ','.join(item_names)
+    def register_item(self, item):
+        if not self._finalized:
+            self._items.append(item)
+        else:
+            raise ValueError('Attempted to register item with finalized Zone')
 
-        enemy_names = map(lambda e: e.name, self.enemies)
-        enemy_line = 'Enemies: ' + ','.join(enemy_names)
-
-        return top_line + '\n' + enemy_line + '\n' + item_line + '\n'
+    def finalize(self):
+        if not self._finalized:
+            self.summary = self._build_summary()
+            self._finalized = True
+            self._enemies = None
+            self._items = None
 
 
 def place_objects(gm, zone):
@@ -90,7 +112,7 @@ def place_objects(gm, zone):
                 monster = Object(x, y, 'P', POINT_DEFENSE_DESTROYER, libtcod.darker_green, blocks=True,
                                  fighter=fighter_component, ai=ai_component)
 
-            zone.enemies.append(monster)
+            zone.register_enemy(monster)
             objects.append(monster)
 
     # Place items
@@ -124,7 +146,7 @@ def place_objects(gm, zone):
                 item = Object(x, y, '[', 'shield', libtcod.sky, equipment=equipment_component, item=Item())
 
             objects.append(item)
-            zone.items.append(item)
+            zone.register_item(item)
             item.send_to_back(objects)
 
     num_satellites = from_dungeon_level(dungeon_level, SATELLITES_PER_LEVEL)
@@ -187,9 +209,13 @@ def make_game_map():
 
     # TODO: Having trouble keeping track of scope/assignment!
     stairs = Object(new_x, new_y, '<', 'stairs', libtcod.white, always_visible=True)
-    zones[-1].items.append(stairs)
+    zones[-1].register_item(stairs)
     objects.append(stairs)
     stairs.send_to_back(objects)
+
+    # Make Zones read-only (well not really, but the summaries become read-only)
+    for zone in zones:
+        zone.finalize()
 
     return gm
 
@@ -517,7 +543,7 @@ def handle_keys():
                        str(player.fighter.defense),
                        CHARACTER_SCREEN_WIDTH)
             elif key_char == 'r':
-                zone_summaries = map(lambda z: z.summary(), zones)
+                zone_summaries = map(lambda z: z.summary, zones)
                 position_header = 'Your position: (' + str(player.x) + ',' + str(player.y) + ')'
                 msg = position_header + '\n\n' + '\n'.join(zone_summaries)
                 msgbox(msg)
