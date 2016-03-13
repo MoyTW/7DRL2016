@@ -636,16 +636,21 @@ def check_level_up():
         message('Level up. Now level ' + str(player.level) + '!', libtcod.green)
 
         choice = None
+
+        choices = ['MAX AND CURRENT HP + 15, (from ' + str(player.fighter.base_max_hp) + ')',
+                   'POWER + 2, (from ' + str(player.fighter.base_power) + ')']
+        if player.fighter.hp < player.fighter.max_hp:
+            choices.append('REPAIR ' + str(int(player.fighter.max_hp / 2)) + ' HP')
+
         while choice is None:
-            choice = menu('Level up! Choose a stat to raise:\n',
-                          ['HP + 20, (from ' + str(player.fighter.base_max_hp) + ')',
-                           'POWER + 3, (from ' + str(player.fighter.base_power) + ')'],
-                          LEVEL_SCREEN_WIDTH)
+            choice = menu('Level up! Choose level-up bonus:\n', choices, LEVEL_SCREEN_WIDTH)
         if choice == 0:
             player.fighter.base_max_hp += 20
             player.fighter.hp += 20
         elif choice == 1:
             player.fighter.base_power += 3
+        elif choice == 2:
+            player.fighter.heal(int(player.fighter.max_hp / 2))
 
 
 def player_death(_):
@@ -854,7 +859,7 @@ def new_game():
     # TODO: Hahaha that's a terrible kludge here, creating the fighter and then setting the player to it later!
     # TODO: Seriously this is terrible and The Worst. If you have time fix it please.
     # Though to be fair it is a 7-day thing so you...probably won't, as much as it hurts to admit it.
-    player_fighter = Fighter(player=None, hp=30, defense=0, power=25, xp=0, death_function=player_death,
+    player_fighter = Fighter(player=None, hp=30, defense=0, power=26, xp=0, death_function=player_death,
                              inventory=inventory)
     player = Object(0, 0, '@', 'player', libtcod.white, blocks=True, is_player=True, fighter=player_fighter)
     player.fighter.player = player
