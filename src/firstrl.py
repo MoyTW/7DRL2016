@@ -620,8 +620,11 @@ def handle_keys():
                        CHARACTER_SCREEN_WIDTH)
             elif key_char == 'r':
                 zone_summaries = map(lambda z: z.summary, zones)
-                position_header = 'Your position: (' + str(player.x) + ',' + str(player.y) + ')'
-                msg = position_header + '\n\n' + '\n'.join(zone_summaries)
+                if zone_intel.get(dungeon_level + 1, False):
+                    intel_header = 'Intel status of next sector: COLLECTED'
+                else:
+                    intel_header = 'Intel status of next sector: UNKNOWN'
+                msg = intel_header + '\n\n' + '\n'.join(zone_summaries)
                 msgbox(msg)
 
             return GAME_STATE_DIDNT_TAKE_TURN
