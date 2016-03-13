@@ -558,10 +558,23 @@ def msgbox(text, width=50):
     menu(text, [], width)
 
 
+def activate_autopilot():
+    options = map(lambda z: z.name, zones)
+    index = menu('Autopilot to:\n', options, AUTOPILOT_WIDTH)
+
+    if not index:
+        return None
+
+    (x, y) = zones[index].center()
+    path = libtcod.path_new_using_map(fov_map)
+    libtcod.path_compute(path, player.x, player.y, x, y)
+    return path
+
+
 # uuuugh scoping
 def handle_keys():
     # TODO: scope
-    global key
+    global key, autopilot_on, autopilot_path
 
     if key.vk == libtcod.KEY_ENTER and key.lalt:
         libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
@@ -598,6 +611,11 @@ def handle_keys():
                     if o.x == player.x and o.y == player.y and o.item:
                         o.item.pick_up()
                         break
+            elif key_char == 'a':
+                path = activate_autopilot()
+                if path is not None:
+                    autopilot_on = True
+                    autopilot_path = path
             elif key_char == 'i':
                 chosen_item = inventory_menu('Press the key next to an item to use it, or any other to cancel.\n')
                 if chosen_item is not None:
@@ -911,10 +929,11 @@ def time_to_next_event(_objects):
 
 
 def play_game():
-    global key, mouse
+    global key, mouse, autopilot_on
 
     mouse = libtcod.Mouse()
     key = libtcod.Key()
+    autopilot_on = False
 
     tutorial = True
 
@@ -946,6 +965,7 @@ def play_game():
                    "Good luck captain!\n\n"
                    "CONTROLS:\n"
                    "KEYPAD: Movement\n"
+                   "a: autopilot to zone\n"
                    "g: pick up an item in your tile\n"
                    "i: view inventory and use items\n"
                    "d: drop items\n"
@@ -961,12 +981,27 @@ def play_game():
             if obj.fighter and (obj.ai or obj == player):
                 obj.fighter.pass_time(time)
 
-        if player.fighter.time_until_turn == 0:
+        # Take turn if not autopiloting
+        if player.fighter.time_until_turn == 0 and not autopilot_on:
             check_level_up()
             player_action = handle_keys()
             if player_action == 'exit':
                 break
             elif player_action != GAME_STATE_DIDNT_TAKE_TURN:
+                player.fighter.end_turn()
+        # Autopilot
+        elif player.fighter.time_until_turn == 0:
+            # Check if there are nearby enemies
+            nearest = closest_monster(TORCH_RADIUS)
+            if nearest:
+                autopilot_on = False
+                message('Enemy ships nearby! Autopilot disengaging!')
+            elif libtcod.path_is_empty(autopilot_path):
+                autopilot_on = False
+                message('You have reached your destination! Autopilot disengaging!')
+            else:
+                (x, y) = libtcod.path_walk(autopilot_path, False)
+                player.move_towards(x, y, game_map, objects)
                 player.fighter.end_turn()
         else:
             player_action = None
