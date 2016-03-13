@@ -20,7 +20,7 @@ def place_objects(gm, zone, safe=False):
             fighter_component = Fighter(player=player, hp=1, defense=9999, power=0, xp=0,
                                         death_function=projectile_death)
             monster = Object(x, y, '#', 'satellite', libtcod.white, blocks=True, fighter=fighter_component)
-            objects.append(monster)
+            non_interactive_objects.append(monster)
             # TODO: Hack!
             gm[x][y].blocked = True
 
@@ -120,9 +120,10 @@ def place_objects(gm, zone, safe=False):
 
 def make_game_map():
     # OH GOD! WHAT IS SCOPE EVEN
-    global objects, stairs, zones, projectiles  # TODO: Haha I'm making it WORSE
+    global objects, stairs, zones, projectiles, non_interactive_objects  # TODO: Haha I'm making it WORSE
 
     objects = [player]
+    non_interactive_objects = []
     projectiles = []
 
     gm = [[Tile(False)
@@ -715,7 +716,8 @@ def target_tile(max_range=None):
         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
 
         renderer.render_all(player=player, objects=objects, projectiles=projectiles, game_map=game_map, con=con,
-                            panel=panel, game_msgs=game_msgs, dungeon_level=dungeon_level, mouse=mouse)
+                            panel=panel, game_msgs=game_msgs, dungeon_level=dungeon_level, mouse=mouse,
+                            non_interactive_objects=non_interactive_objects)
 
         (x, y) = (renderer.camera_x + mouse.cx, renderer.camera_y + mouse.cy)
 
@@ -948,7 +950,8 @@ def play_game():
         libtcod.console_set_default_foreground(0, libtcod.white)
 
         renderer.render_all(player=player, objects=objects, game_map=game_map, con=con, panel=panel,
-                            projectiles=projectiles, game_msgs=game_msgs, dungeon_level=dungeon_level, mouse=mouse)
+                            projectiles=projectiles, game_msgs=game_msgs, dungeon_level=dungeon_level, mouse=mouse,
+                            non_interactive_objects=non_interactive_objects)
 
         libtcod.console_flush()
 

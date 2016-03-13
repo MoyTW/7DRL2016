@@ -108,11 +108,13 @@ def highlight_movers(con, fov_map, game_map, camera_x, camera_y, objects, timefr
 
 
 def render_all(fov_recompute, player, objects, projectiles, fov_map, game_map, con, panel, game_msgs, dungeon_level,
-               mouse, camera_x, camera_y, timeframe):  # TODO: Silly
+               mouse, camera_x, camera_y, timeframe, non_interactive_objects):  # TODO: Silly
 
     (camera_x, camera_y, recompute) = move_camera(player.x, player.y, camera_x, camera_y)
     fov_recompute = fov_recompute or recompute
 
+    for non_interactive_object in non_interactive_objects:
+        non_interactive_object.draw(con, fov_map, game_map, camera_x, camera_y)
     for projectile in projectiles:
         projectile.draw(con, fov_map, game_map, camera_x, camera_y)
     player.draw(con, fov_map, game_map, camera_x, camera_y)
@@ -189,13 +191,15 @@ class Renderer(object):
     def force_recompute(self):
         self.fov_recompute = True
 
-    def render_all(self, player, objects, projectiles, game_map, con, panel, game_msgs, dungeon_level, mouse):
+    def render_all(self, player, objects, projectiles, game_map, con, panel, game_msgs, dungeon_level, mouse,
+                   non_interactive_objects):
         (camera_x, camera_y, fov_recompute) = render_all(fov_recompute=self.fov_recompute, player=player,
                                                          objects=objects, fov_map=self.fov_map, game_map=game_map,
                                                          con=con, panel=panel, game_msgs=game_msgs,
                                                          dungeon_level=dungeon_level, mouse=mouse,
                                                          camera_x=self.camera_x, camera_y=self.camera_y,
-                                                         timeframe=player.fighter.speed, projectiles=projectiles)
+                                                         timeframe=player.fighter.speed, projectiles=projectiles,
+                                                         non_interactive_objects=non_interactive_objects)
         self.camera_x = camera_x
         self.camera_y = camera_y
         self.fov_recompute = fov_recompute
