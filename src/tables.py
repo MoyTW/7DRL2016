@@ -8,6 +8,7 @@ L3_ENCOUNTER = 3
 L4_ENCOUNTER = 4
 L5_ENCOUNTER = 5
 L6_ENCOUNTER = 6
+L7_ENCOUNTER = 7
 
 EMPTY_ENCOUNTER = 'empty encounter'
 SCOUT_ENCOUNTER = 'scout encounter'
@@ -33,6 +34,9 @@ CRUISER_FIGHTER_ENCOUNTER = 'cruiser fighter'
 CARRIER_SCREEN_ENCOUNTER = 'carrier screen'
 CARRIER_DESTROYER_ENCOUNTER = 'carrier destroyer'
 CARRIER_TASK_FORCE_ENCOUNTER = 'carrier task force'
+FAST_RESPONSE_FLEET_ENCOUNTER = 'fast response fleet'
+HEAVY_STRIKE_FORCE_ENCOUNTER = 'heavy strike force'
+EVER_VICTORIOUS_FLEET_ENCOUNTER = 'ever victorious fleet'
 
 PLACEHOLDER_ENCOUNTER = 'placeholder'
 
@@ -60,6 +64,13 @@ encounters_to_ship_lists = {
     CARRIER_SCREEN_ENCOUNTER: [CARRIER, SCOUT, SCOUT, SCOUT, GUNSHIP, GUNSHIP, GUNSHIP],
     CARRIER_DESTROYER_ENCOUNTER: [CARRIER, DESTROYER, GUNSHIP],
     CARRIER_TASK_FORCE_ENCOUNTER: [CARRIER, CRUISER, DESTROYER, DESTROYER, FRIGATE, FRIGATE, FRIGATE],
+    FAST_RESPONSE_FLEET_ENCOUNTER: [DESTROYER, DESTROYER, DESTROYER, DESTROYER, DESTROYER, DESTROYER, FRIGATE, FRIGATE, GUNSHIP,
+                                    GUNSHIP, GUNSHIP, GUNSHIP, GUNSHIP, GUNSHIP, GUNSHIP, GUNSHIP, GUNSHIP, GUNSHIP,
+                                    GUNSHIP, GUNSHIP],
+    HEAVY_STRIKE_FORCE_ENCOUNTER: [CRUISER, CRUISER, CRUISER, CRUISER, CARRIER, CARRIER, DESTROYER, DESTROYER],
+    EVER_VICTORIOUS_FLEET_ENCOUNTER: [CRUISER, CRUISER, CRUISER, CRUISER, CARRIER, CARRIER, DESTROYER, DESTROYER,
+                                      CARRIER, CRUISER, FRIGATE, FRIGATE, FRIGATE, FRIGATE, FRIGATE],
+
     PLACEHOLDER_ENCOUNTER: ['placeholder']
 }
 
@@ -91,6 +102,10 @@ L6_ENCOUNTER_TABLE = {CARRIER_ENCOUNTER: 50,
                       CARRIER_SCREEN_ENCOUNTER: 100,
                       CARRIER_DESTROYER_ENCOUNTER: 100,
                       CARRIER_TASK_FORCE_ENCOUNTER: 50}
+L7_ENCOUNTER_TABLE = {CARRIER_TASK_FORCE_ENCOUNTER: 50,
+                      FAST_RESPONSE_FLEET_ENCOUNTER: 100,
+                      HEAVY_STRIKE_FORCE_ENCOUNTER: 100,
+                      EVER_VICTORIOUS_FLEET_ENCOUNTER: 50}
 
 ENCOUNTERS_TO_ENCOUNTER_TABLES = {L0_ENCOUNTER: L0_ENCOUNTER_TABLE,
                                   L1_ENCOUNTER: L1_ENCOUNTER_TABLE,
@@ -102,20 +117,21 @@ ENCOUNTERS_TO_ENCOUNTER_TABLES = {L0_ENCOUNTER: L0_ENCOUNTER_TABLE,
 
 # This table is kind of silly in that there's a much better way to represent it! If you have time (you won't)
 # Scouts
-L0_ENCOUNTER_CHANCES = [[20, 1], [10, 2], [05, 3], [00, 4], [00, 5], [00, 6], [00, 7], [00, 8], [00, 9]]
+L0_ENCOUNTER_CHANCES = [[20, 1], [10, 2], [00, 3], [00, 4], [00, 5], [00, 6], [00, 7], [00, 8], [00, 9]]
 # Fighters
-L1_ENCOUNTER_CHANCES = [[10, 1], [20, 2], [10, 3], [05, 4], [00, 5], [00, 6], [00, 7], [00, 8], [00, 9]]
+L1_ENCOUNTER_CHANCES = [[10, 1], [20, 2], [10, 3], [00, 4], [00, 5], [00, 6], [00, 7], [00, 8], [00, 9]]
 # Gunships
-L2_ENCOUNTER_CHANCES = [[05, 1], [10, 2], [20, 3], [10, 4], [05, 5], [00, 6], [00, 7], [00, 8], [00, 9]]
+L2_ENCOUNTER_CHANCES = [[00, 1], [10, 2], [20, 3], [10, 4], [00, 5], [00, 6], [00, 7], [00, 8], [00, 9]]
 # Frigates
-L3_ENCOUNTER_CHANCES = [[00, 1], [05, 2], [10, 3], [20, 4], [10, 5], [05, 6], [00, 7], [00, 8], [00, 9]]
+L3_ENCOUNTER_CHANCES = [[00, 1], [00, 2], [10, 3], [20, 4], [10, 5], [00, 6], [00, 7], [00, 8], [00, 9]]
 # Destroyers
-L4_ENCOUNTER_CHANCES = [[00, 1], [00, 2], [05, 3], [10, 4], [20, 5], [10, 6], [05, 7], [00, 8], [00, 9]]
+L4_ENCOUNTER_CHANCES = [[00, 1], [00, 2], [00, 3], [10, 4], [20, 5], [10, 6], [00, 7], [00, 8], [00, 9]]
 # Cruisers
-L5_ENCOUNTER_CHANCES = [[00, 1], [00, 2], [00, 3], [05, 4], [10, 5], [20, 6], [10, 7], [05, 8], [00, 9]]
+L5_ENCOUNTER_CHANCES = [[00, 1], [00, 2], [00, 3], [00, 4], [10, 5], [20, 6], [10, 7], [00, 8], [00, 9]]
+# Carriers
+L6_ENCOUNTER_CHANCES = [[00, 1], [00, 2], [00, 3], [00, 4], [00, 5], [10, 6], [20, 7], [10, 8], [00, 9]]
 # DEATH
-L6_ENCOUNTER_CHANCES = [[00, 1], [00, 2], [00, 3], [00, 4], [05, 5], [10, 6], [20, 7], [10, 8], [05, 9]]
-
+L7_ENCOUNTER_CHANCES = [[00, 1], [00, 2], [00, 3], [00, 4], [00, 5], [00, 6], [00, 7], [00, 8], [01, 9]]
 
 def choose_encounter_for_level(level):
     table = {L0_ENCOUNTER: utils.from_dungeon_level(level, L0_ENCOUNTER_CHANCES),
