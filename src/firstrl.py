@@ -203,8 +203,7 @@ def make_game_map():
 
     # Make Zones read-only (well not really, but the summaries become read-only)
     for zone in zones:
-        zone.finalize(True)
-        # zone.finalize(zone_intel.get(dungeon_level, False))
+        zone.finalize(zone_intel.get(dungeon_level, False))
 
     return gm
 
