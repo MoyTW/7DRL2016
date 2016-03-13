@@ -545,7 +545,7 @@ def inventory_menu(header):
     else:
         options = []
         for item in inventory:
-            text = item.name
+            text = item.name + ' (' + ITEM_NAMES_TO_DESCRIPTIONS[item.name] + ')'
             if item.equipment and item.equipment.is_equipped:
                 text = text + ' (on ' + item.equipment.slot + ')'
             options.append(text)
@@ -733,8 +733,9 @@ def closest_monster(max_range):
 
 
 def boost_player_power():
-    player.fighter.apply_power_buff(20, 450)
-    message('You supercharge your laser! Power +20 for 450 TUs!', libtcod.light_yellow)
+    player.fighter.apply_power_buff(BATTERY_POWER, BATTERY_DURATION)
+    message('You supercharge your laser! Power +' + str(BATTERY_POWER) + ' for' + str(BATTERY_DURATION) + ' TUs!',
+            libtcod.light_yellow)
 
 
 def boost_player_speed():

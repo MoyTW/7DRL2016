@@ -28,12 +28,6 @@ MSG_HEIGHT = PANEL_HEIGHT - 1
 
 INVENTORY_WIDTH = 50
 
-REPAIR_AMOUNT = 10
-LIGHTNING_RANGE = 5
-LIGHTNING_DAMAGE = 20
-AREA_DISABLE_TURNS = 10
-AREA_DISABLE_RANGE = 20
-
 CUTTING_LASER_RANGE = 3
 
 LEVEL_UP_BASE = 200
@@ -63,7 +57,23 @@ CRUISER = 'cruiser'
 CARRIER = 'carrier'
 DIPLOMAT = 'diplomat'
 
+# Items
 ITEM_DUCT_TAPE = 'roll of duct tape'
+REPAIR_AMOUNT = 10
+
 ITEM_EXTRA_BATTERY = 'super battery'
+BATTERY_POWER = 20
+BATTERY_DURATION = 450
+
 ITEM_RED_PAINT = 'can of red paint'
+
 ITEM_EMP = 'pulse blaster'
+AREA_DISABLE_TURNS = 10
+AREA_DISABLE_RANGE = 20
+
+ITEM_NAMES_TO_DESCRIPTIONS = {
+    ITEM_DUCT_TAPE: 'repair ' + str(REPAIR_AMOUNT) + ' damage',
+    ITEM_EXTRA_BATTERY: 'power +' + str(BATTERY_POWER) + ', ' + str(BATTERY_DURATION) + ' TUs',
+    ITEM_RED_PAINT: 'quadruple speed, 300 TUs',
+    ITEM_EMP: 'disable enemies, radius ' + str(AREA_DISABLE_RANGE)
+}
