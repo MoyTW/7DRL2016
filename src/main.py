@@ -656,15 +656,15 @@ def check_level_up():
         choice = None
 
         choices = ['MAX AND CURRENT HP + 15, (from ' + str(player.fighter.base_max_hp) + ')',
-                   'POWER + 2, (from ' + str(player.fighter.base_power) + ')']
+                   'POWER + 3, (from ' + str(player.fighter.base_power) + ')']
         if player.fighter.hp < player.fighter.max_hp:
             choices.append('REPAIR ' + str(int(player.fighter.max_hp / 2)) + ' HP')
 
         while choice is None:
             choice = menu('Level up! Choose level-up bonus:\n', choices, LEVEL_SCREEN_WIDTH)
         if choice == 0:
-            player.fighter.base_max_hp += 20
-            player.fighter.hp += 20
+            player.fighter.base_max_hp += 15
+            player.fighter.hp += 15
         elif choice == 1:
             player.fighter.base_power += 3
         elif choice == 2:
