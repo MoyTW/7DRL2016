@@ -46,7 +46,7 @@ MAX_ZONES = 9
 
 TIME_IN_TURN = 100
 
-SATELLITES_PER_LEVEL = [[30, 1], [25, 3], [20, 5]]
+SATELLITES_PER_LEVEL = [[20, 1], [15, 3], [10, 5], [30, 9]]
 
 SCOUT = 'scout'
 FIGHTER = 'fighter'
