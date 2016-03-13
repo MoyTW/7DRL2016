@@ -359,21 +359,20 @@ class CarrierMonster(MonsterAI):
         if self.is_activated():
             # Launch
             choice = utils.random_choice(self.launch_table)
-            # TODO: Use pathfinding here! Otherwise you can spawn into a blocked square!
-            (x, y) = LinePath(self.owner.x, self.owner.y, player.x, player.y).project(1)[0]
             if choice == SCOUT:
                 fighter_component = Fighter(player=player, hp=10, defense=0, power=0, xp=30, base_speed=75,
                                             death_function=projectile_death)
                 ai_component = ScoutMonster(activated=True)
-                self.owner = Object(x, y, 'S', SCOUT, libtcod.darker_green, blocks=True, fighter=fighter_component,
-                                    ai=ai_component)
+                enemy = Object(self.owner.x, self.owner.y, 'S', SCOUT, libtcod.darker_green, blocks=True,
+                               fighter=fighter_component, ai=ai_component)
             elif choice == FIGHTER:
                 fighter_component = Fighter(player=player, hp=30, defense=0, power=0, xp=50, base_speed=125,
                                             death_function=projectile_death)
                 ai_component = FighterMonster(activated=True)
-                self.owner = Object(x, y, 'F', FIGHTER, libtcod.darker_green, blocks=True,
-                                    fighter=fighter_component, ai=ai_component)
-            objects.append(self.owner)
+                enemy = Object(self.owner.x, self.owner.y, 'F', FIGHTER, libtcod.darker_green, blocks=True,
+                               fighter=fighter_component, ai=ai_component)
+            objects.append(enemy)
+            enemy.path_towards(player.x, player.y, game_map, objects, fov_map)
 
             # If the player is too close, flak burst
             if self.owner.distance_to(player) <= 4 and self.current_flak_cooldown == 0:
