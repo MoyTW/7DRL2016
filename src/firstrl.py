@@ -13,9 +13,11 @@ import tables
 
 def place_objects(gm, zone, safe=False):
     if not safe:
-        enemies = tables.choose_encounter_for_level(dungeon_level)
+        encounter = tables.choose_encounter_for_level(dungeon_level)
     else:
-        enemies = []
+        encounter = tables.EMPTY_ENCOUNTER
+    zone.encounter = encounter
+    enemies = tables.encounters_to_ship_lists[encounter]
     for choice in enemies:
         (x, y) = zone.random_coordinates()
 
@@ -70,7 +72,6 @@ def place_objects(gm, zone, safe=False):
                 monster = Object(x, y, 'P', 'placeholder', libtcod.darker_green, blocks=True, fighter=fighter_component,
                                  ai=ai_component)
 
-            zone.register_enemy(monster)
             objects.append(monster)
 
     max_items = utils.from_dungeon_level(dungeon_level, [[3, 1], [2, 4], [1, 6]])

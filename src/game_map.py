@@ -21,7 +21,7 @@ class Zone(object):
         self.y2 = y + h
         self.name = 'Zone ' + str(name)
 
-        self._enemies = []
+        self.encounter = ''
         self._items = []
 
         self._finalized = False
@@ -33,15 +33,14 @@ class Zone(object):
 
         if has_intel:
             item_names = map(lambda i: i.name, self._items)
-            item_line = 'Items: ' + ','.join(item_names)
+            item_line = 'Items: ' + ', '.join(item_names)
 
-            enemy_names = map(lambda e: e.name, self._enemies)
-            enemy_line = 'Enemies: ' + ','.join(enemy_names)
+            encounter_line = 'Enemies: ' + self.encounter.capitalize()
         else:
             item_line = 'Items: UNKNOWN'
-            enemy_line = 'Enemies: UNKNOWN'
+            encounter_line = 'Enemies: UNKNOWN'
 
-        return top_line + '\n' + enemy_line + '\n' + item_line + '\n'
+        return top_line + '\n' + encounter_line + '\n' + item_line + '\n'
 
     def center(self):
         return (self.x1 + self.x2) / 2, (self.y1 + self.y2) / 2
@@ -60,12 +59,6 @@ class Zone(object):
     def intersect(self, other):
         return self.x1 <= other.x2 and self.x2 >= other.x1 and self.y1 <= other.y2 and self.y2 >= other.y1
 
-    def register_enemy(self, enemy):
-        if not self._finalized:
-            self._enemies.append(enemy)
-        else:
-            raise ValueError('Attempted to register enemy with finalized zone')
-
     def register_item(self, item):
         if not self._finalized:
             self._items.append(item)
@@ -76,5 +69,4 @@ class Zone(object):
         if not self._finalized:
             self.summary = self._build_summary(has_intel)
             self._finalized = True
-            self._enemies = None
             self._items = None
