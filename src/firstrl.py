@@ -73,7 +73,7 @@ def place_objects(gm, zone, safe=False):
             zone.register_enemy(monster)
             objects.append(monster)
 
-    max_items = utils.from_dungeon_level(dungeon_level, [[1, 1], [2, 4], [3, 6]])
+    max_items = utils.from_dungeon_level(dungeon_level, [[3, 1], [2, 4], [1, 6]])
     item_chances = {ITEM_DUCT_TAPE: 45,
                     ITEM_EXTRA_BATTERY: 25,
                     ITEM_RED_PAINT: 10,
