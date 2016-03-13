@@ -1,5 +1,6 @@
 import libtcodpy as libtcod
 
+
 class ProjectileAI(object):
     def __init__(self, path, game_map, objects, message_fn):  # TODO: Kinda iffy
         self.path = path

@@ -120,9 +120,10 @@ def place_objects(gm, zone, safe=False):
 
 def make_game_map():
     # OH GOD! WHAT IS SCOPE EVEN
-    global objects, stairs, zones  # TODO: Haha I'm making it WORSE
+    global objects, stairs, zones, projectiles  # TODO: Haha I'm making it WORSE
 
     objects = [player]
+    projectiles = []
 
     gm = [[Tile(False)
            for _ in range(MAP_HEIGHT)]
@@ -695,7 +696,7 @@ def monster_death(monster):
 
 
 def projectile_death(projectile):
-    objects.remove(projectile)
+    projectiles.remove(projectile)
 
 
 def diplomat_death(diplomat):
@@ -713,8 +714,8 @@ def target_tile(max_range=None):
         libtcod.console_flush()
         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
 
-        renderer.render_all(player=player, objects=objects, game_map=game_map, con=con, panel=panel,
-                            game_msgs=game_msgs, dungeon_level=dungeon_level, mouse=mouse)
+        renderer.render_all(player=player, objects=objects, projectiles=projectiles, game_map=game_map, con=con,
+                            panel=panel, game_msgs=game_msgs, dungeon_level=dungeon_level, mouse=mouse)
 
         (x, y) = (renderer.camera_x + mouse.cx, renderer.camera_y + mouse.cy)
 
@@ -794,8 +795,7 @@ def fire_railgun(caster, target):
     ai_component = ProjectileAI(path, game_map, objects, message)
     projectile = Object(caster.x, caster.y, 'l', 'railgun slug', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
-    objects.append(projectile)
-    projectile.send_to_back(objects)
+    projectiles.append(projectile)
 
 
 def fire_returning_shot(caster, target):
@@ -805,8 +805,7 @@ def fire_returning_shot(caster, target):
     ai_component = ProjectileAI(path, game_map, objects, message)
     projectile = Object(caster.x, caster.y, 'r', 'reverser shot', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
-    objects.append(projectile)
-    projectile.send_to_back(objects)
+    projectiles.append(projectile)
 
 
 def single_small_shotgun(source_x, source_y, target_x, target_y):
@@ -816,8 +815,7 @@ def single_small_shotgun(source_x, source_y, target_x, target_y):
     ai_component = ProjectileAI(path, game_map, objects, message)
     projectile = Object(source_x, source_y, 's', 'small shotgun shell', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
-    objects.append(projectile)
-    projectile.send_to_back(objects)
+    projectiles.append(projectile)
 
 
 def fire_small_shotgun(caster, target, spread=5, pellets=5):
@@ -834,8 +832,7 @@ def fire_small_gatling(caster, target):
     ai_component = ProjectileAI(path, game_map, objects, message)
     projectile = Object(caster.x, caster.y, 'g', 'small gatling shell', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
-    objects.append(projectile)
-    projectile.send_to_back(objects)
+    projectiles.append(projectile)
 
 
 def fire_small_cannon(caster, target):
@@ -845,8 +842,7 @@ def fire_small_cannon(caster, target):
     ai_component = ProjectileAI(path, game_map, objects, message)
     projectile = Object(caster.x, caster.y, 'c', 'small cannon shell', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
-    objects.append(projectile)
-    projectile.send_to_back(objects)
+    projectiles.append(projectile)
 
 
 def fire_cutting_laser(caster, target):
@@ -856,8 +852,7 @@ def fire_cutting_laser(caster, target):
     ai_component = ProjectileAI(path, game_map, objects, message)
     projectile = Object(caster.x, caster.y, '*', 'cutting beam', libtcod.red, blocks=False, is_projectile=True,
                         fighter=fighter_component, ai=ai_component)
-    objects.append(projectile)
-    projectile.send_to_back(objects)
+    projectiles.append(projectile)
 
 
 def message(new_msg, color=libtcod.white):
@@ -924,12 +919,15 @@ def initialize_fov():
     libtcod.console_clear(con)
 
 
-def time_to_next_event(_objects):
+def time_to_next_event(_objects, _projectiles):
     time = 9999
     for obj in _objects:
         if obj.fighter:
             if obj.fighter.time_until_turn < time:
                 time = obj.fighter.time_until_turn
+    for projectile in _projectiles:
+        if projectile.fighter.time_until_turn < time:
+            time = projectile.fighter.time_until_turn
     return time
 
 
@@ -950,11 +948,12 @@ def play_game():
         libtcod.console_set_default_foreground(0, libtcod.white)
 
         renderer.render_all(player=player, objects=objects, game_map=game_map, con=con, panel=panel,
-                            game_msgs=game_msgs, dungeon_level=dungeon_level, mouse=mouse)
+                            projectiles=projectiles, game_msgs=game_msgs, dungeon_level=dungeon_level, mouse=mouse)
 
         libtcod.console_flush()
 
         renderer.clear_objects(con, objects)
+        renderer.clear_objects(con, projectiles)
 
         if tutorial:
             msgbox("Welcome to the game!\n\n"
@@ -981,10 +980,12 @@ def play_game():
             tutorial = False
 
         # TODO: Kind of messy way of structuring this!
-        time = time_to_next_event(objects)
+        time = time_to_next_event(objects, projectiles)
         for obj in objects:
             if obj.fighter and (obj.ai or obj == player):
                 obj.fighter.pass_time(time)
+        for projectile in projectiles:
+            projectile.fighter.pass_time(time)
 
         # Take turn if not autopiloting
         if player.fighter.time_until_turn == 0 and not autopilot_on:
@@ -1019,6 +1020,10 @@ def play_game():
                 if o.fighter and o.fighter.time_until_turn == 0 and o.ai:
                     o.ai.take_turn()
                     o.fighter.end_turn()
+            for projectile in projectiles:
+                if projectile.fighter.time_until_turn == 0:
+                    projectile.ai.take_turn()
+                    projectile.fighter.end_turn()
 
 
 def main_menu():
