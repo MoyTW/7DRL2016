@@ -58,16 +58,16 @@ CARRIER = 'carrier'
 DIPLOMAT = 'diplomat'
 
 # Items
-ITEM_DUCT_TAPE = 'roll of duct tape'
+ITEM_DUCT_TAPE = 'duct tape'
 REPAIR_AMOUNT = 10
 
-ITEM_EXTRA_BATTERY = 'super battery'
+ITEM_EXTRA_BATTERY = 'battery'
 BATTERY_POWER = 20
 BATTERY_DURATION = 450
 
-ITEM_RED_PAINT = 'can of red paint'
+ITEM_RED_PAINT = 'red paint'
 
-ITEM_EMP = 'pulse blaster'
+ITEM_EMP = 'EMP device'
 AREA_DISABLE_TURNS = 10
 AREA_DISABLE_RANGE = 20
 
