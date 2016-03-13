@@ -608,7 +608,7 @@ def handle_keys():
                 chosen_item = inventory_menu('Press the key next to an item to drop it, or any other to cancel.\n')
                 if chosen_item is not None:
                     chosen_item.drop()
-            elif key_char == '<':
+            elif key_char == '<' or key_char == ',':
                 if stairs.x == player.x and stairs.y == player.y:
                     next_level()
             elif key_char == 'c':
