@@ -12,101 +12,6 @@ import tables
 
 
 def place_objects(gm, zone, safe=False):
-    if not safe:
-        encounter = tables.choose_encounter_for_level(dungeon_level)
-    else:
-        encounter = tables.EMPTY_ENCOUNTER
-    zone.encounter = encounter
-    enemies = tables.encounters_to_ship_lists[encounter]
-    for choice in enemies:
-        (x, y) = zone.random_coordinates()
-
-        if not is_blocked(x, y, gm, objects):
-            if choice == SCOUT:
-                fighter_component = Fighter(player=player, hp=10, defense=0, power=0, xp=30, base_speed=75,
-                                            death_function=monster_death)
-                ai_component = ScoutMonster()
-                monster = Object(x, y, 'S', SCOUT, libtcod.darker_green, blocks=True, fighter=fighter_component,
-                                 ai=ai_component)
-            elif choice == FIGHTER:
-                fighter_component = Fighter(player=player, hp=30, defense=0, power=0, xp=50, base_speed=125,
-                                            death_function=monster_death)
-                ai_component = FighterMonster()
-                monster = Object(x, y, 'F', FIGHTER, libtcod.darker_green, blocks=True, fighter=fighter_component,
-                                 ai=ai_component)
-            elif choice == GUNSHIP:
-                fighter_component = Fighter(player=player, hp=50, defense=4, power=3, xp=100, base_speed=100,
-                                            death_function=monster_death)
-                ai_component = GunshipMonster()
-                monster = Object(x, y, 'G', GUNSHIP, libtcod.darker_green, blocks=True, fighter=fighter_component,
-                                 ai=ai_component)
-            elif choice == FRIGATE:
-                fighter_component = Fighter(player=player, hp=150, defense=10, power=3, xp=200, base_speed=250,
-                                            death_function=monster_death)
-                ai_component = FrigateMonster()
-                monster = Object(x, y, 'R', FRIGATE, libtcod.darker_green, blocks=True, fighter=fighter_component,
-                                 ai=ai_component)
-            elif choice == DESTROYER:
-                fighter_component = Fighter(player=player, hp=200, defense=15, power=0, xp=500, base_speed=300,
-                                            death_function=monster_death)
-                ai_component = DestroyerMonster()
-                monster = Object(x, y, 'D', DESTROYER, libtcod.darker_green, blocks=True,
-                                 fighter=fighter_component, ai=ai_component)
-            elif choice == CRUISER:
-                fighter_component = Fighter(player=player, hp=300, defense=10, power=0, xp=1000, base_speed=400,
-                                            death_function=monster_death)
-                ai_component = CruiserMonster()
-                monster = Object(x, y, 'C', CRUISER, libtcod.darker_green, blocks=True,
-                                 fighter=fighter_component, ai=ai_component)
-            elif choice == CARRIER:
-                fighter_component = Fighter(player=player, hp=500, defense=0, power=0, xp=2000, base_speed=200,
-                                            death_function=monster_death)
-                ai_component = CarrierMonster()
-                monster = Object(x, y, 'A', CARRIER, libtcod.darker_green, blocks=True,
-                                 fighter=fighter_component, ai=ai_component)
-            elif choice == 'placeholder':
-                print('placeholder encounter')
-                fighter_component = Fighter(player=player, hp=10, defense=0, power=0, xp=30, base_speed=75,
-                                            death_function=projectile_death)
-                ai_component = ScoutMonster()
-                monster = Object(x, y, 'P', 'placeholder', libtcod.darker_green, blocks=True, fighter=fighter_component,
-                                 ai=ai_component)
-
-            objects.append(monster)
-
-    max_items = utils.from_dungeon_level(dungeon_level, [[3, 1], [2, 4], [1, 6]])
-    item_chances = {ITEM_DUCT_TAPE: 45,
-                    ITEM_EXTRA_BATTERY: 25,
-                    ITEM_RED_PAINT: 10,
-                    ITEM_EMP: 10}
-
-    # Place items
-    num_items = libtcod.random_get_int(0, 0, max_items)
-    for _ in range(num_items):
-        (x, y) = zone.random_coordinates()
-
-        if not is_blocked(x, y, gm, objects):
-            choice = utils.random_choice(item_chances)
-
-            if choice == ITEM_DUCT_TAPE:
-                item_component = Item(use_function=use_repair_player)
-                item = Object(x, y, 't', ITEM_DUCT_TAPE, libtcod.violet, always_visible=True, item=item_component)
-            elif choice == ITEM_EXTRA_BATTERY:
-                item_component = Item(use_function=boost_player_power)
-                item = Object(x, y, 'b', ITEM_EXTRA_BATTERY, libtcod.light_yellow, always_visible=True,
-                              item=item_component)
-            elif choice == ITEM_EMP:
-                item_component = Item(use_function=cast_area_disable)
-                item = Object(x, y, 'p', ITEM_EMP, libtcod.light_blue, always_visible=True,
-                              item=item_component)
-            elif choice == ITEM_RED_PAINT:
-                item = Object(x, y, 'r', ITEM_RED_PAINT, libtcod.light_red, always_visible=True,
-                              item=Item(use_function=boost_player_speed))
-
-            objects.append(item)
-            zone.register_item(item)
-            item.send_to_back(objects)
-
     num_satellites = utils.from_dungeon_level(dungeon_level, SATELLITES_PER_LEVEL)
     for _ in range(num_satellites):
         (x, y) = zone.random_coordinates()
@@ -118,6 +23,99 @@ def place_objects(gm, zone, safe=False):
             objects.append(monster)
             # TODO: Hack!
             gm[x][y].blocked = True
+
+    if not safe:
+        encounter = tables.choose_encounter_for_level(dungeon_level)
+    else:
+        encounter = tables.EMPTY_ENCOUNTER
+    zone.encounter = encounter
+    enemies = tables.encounters_to_ship_lists[encounter]
+    for choice in enemies:
+        (x, y) = zone.random_unblocked_coordinates(gm, objects)
+
+        if choice == SCOUT:
+            fighter_component = Fighter(player=player, hp=10, defense=0, power=0, xp=30, base_speed=75,
+                                        death_function=monster_death)
+            ai_component = ScoutMonster()
+            monster = Object(x, y, 'S', SCOUT, libtcod.darker_green, blocks=True, fighter=fighter_component,
+                             ai=ai_component)
+        elif choice == FIGHTER:
+            fighter_component = Fighter(player=player, hp=30, defense=0, power=0, xp=50, base_speed=125,
+                                        death_function=monster_death)
+            ai_component = FighterMonster()
+            monster = Object(x, y, 'F', FIGHTER, libtcod.darker_green, blocks=True, fighter=fighter_component,
+                             ai=ai_component)
+        elif choice == GUNSHIP:
+            fighter_component = Fighter(player=player, hp=50, defense=4, power=3, xp=100, base_speed=100,
+                                        death_function=monster_death)
+            ai_component = GunshipMonster()
+            monster = Object(x, y, 'G', GUNSHIP, libtcod.darker_green, blocks=True, fighter=fighter_component,
+                             ai=ai_component)
+        elif choice == FRIGATE:
+            fighter_component = Fighter(player=player, hp=150, defense=10, power=3, xp=200, base_speed=250,
+                                        death_function=monster_death)
+            ai_component = FrigateMonster()
+            monster = Object(x, y, 'R', FRIGATE, libtcod.darker_green, blocks=True, fighter=fighter_component,
+                             ai=ai_component)
+        elif choice == DESTROYER:
+            fighter_component = Fighter(player=player, hp=200, defense=15, power=0, xp=500, base_speed=300,
+                                        death_function=monster_death)
+            ai_component = DestroyerMonster()
+            monster = Object(x, y, 'D', DESTROYER, libtcod.darker_green, blocks=True,
+                             fighter=fighter_component, ai=ai_component)
+        elif choice == CRUISER:
+            fighter_component = Fighter(player=player, hp=300, defense=10, power=0, xp=1000, base_speed=400,
+                                        death_function=monster_death)
+            ai_component = CruiserMonster()
+            monster = Object(x, y, 'C', CRUISER, libtcod.darker_green, blocks=True,
+                             fighter=fighter_component, ai=ai_component)
+        elif choice == CARRIER:
+            fighter_component = Fighter(player=player, hp=500, defense=0, power=0, xp=2000, base_speed=200,
+                                        death_function=monster_death)
+            ai_component = CarrierMonster()
+            monster = Object(x, y, 'A', CARRIER, libtcod.darker_green, blocks=True,
+                             fighter=fighter_component, ai=ai_component)
+        elif choice == 'placeholder':
+            print('placeholder encounter')
+            fighter_component = Fighter(player=player, hp=10, defense=0, power=0, xp=30, base_speed=75,
+                                        death_function=projectile_death)
+            ai_component = ScoutMonster()
+            monster = Object(x, y, 'P', 'placeholder', libtcod.darker_green, blocks=True, fighter=fighter_component,
+                             ai=ai_component)
+
+        objects.append(monster)
+
+    max_items = utils.from_dungeon_level(dungeon_level, [[3, 1], [2, 4], [1, 6]])
+    item_chances = {ITEM_DUCT_TAPE: 45,
+                    ITEM_EXTRA_BATTERY: 25,
+                    ITEM_RED_PAINT: 10,
+                    ITEM_EMP: 10}
+
+    # Place items
+    num_items = libtcod.random_get_int(0, 0, max_items)
+    for _ in range(num_items):
+        (x, y) = zone.random_unblocked_coordinates(gm, objects)
+
+        choice = utils.random_choice(item_chances)
+
+        if choice == ITEM_DUCT_TAPE:
+            item_component = Item(use_function=use_repair_player)
+            item = Object(x, y, 't', ITEM_DUCT_TAPE, libtcod.violet, always_visible=True, item=item_component)
+        elif choice == ITEM_EXTRA_BATTERY:
+            item_component = Item(use_function=boost_player_power)
+            item = Object(x, y, 'b', ITEM_EXTRA_BATTERY, libtcod.light_yellow, always_visible=True,
+                          item=item_component)
+        elif choice == ITEM_EMP:
+            item_component = Item(use_function=cast_area_disable)
+            item = Object(x, y, 'p', ITEM_EMP, libtcod.light_blue, always_visible=True,
+                          item=item_component)
+        elif choice == ITEM_RED_PAINT:
+            item = Object(x, y, 'r', ITEM_RED_PAINT, libtcod.light_red, always_visible=True,
+                          item=Item(use_function=boost_player_speed))
+
+        objects.append(item)
+        zone.register_item(item)
+        item.send_to_back(objects)
 
 
 def make_game_map():
