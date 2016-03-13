@@ -562,7 +562,7 @@ def activate_autopilot():
     options = map(lambda z: z.name, zones)
     index = menu('Autopilot to:\n', options, AUTOPILOT_WIDTH)
 
-    if not index:
+    if index is None:
         return None
 
     (x, y) = zones[index].center()
@@ -993,6 +993,9 @@ def play_game():
         elif player.fighter.time_until_turn == 0:
             # Check if there are nearby enemies
             nearest = closest_monster(TORCH_RADIUS)
+            if key.vk != libtcod.KEY_NONE:
+                autopilot_on = False
+                message('Disengaging autopilot on pilot input!')
             if nearest:
                 autopilot_on = False
                 message('Enemy ships nearby! Autopilot disengaging!')
