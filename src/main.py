@@ -158,7 +158,12 @@ def make_game_map():
         if not failed:
             (new_x, new_y) = new_zone.center()
 
-            place_objects(gm, new_zone, len(zones) == 0)
+            if dungeon_level == 9:
+                place_objects(gm, new_zone, False)
+                msgbox("You're getting close! The diplomat is just one last jump away! Try to avoid fighting if you "
+                       "can, they've dispatched their elite forces here to stop you!")
+            else:
+                place_objects(gm, new_zone, len(zones) == 0)
 
             if len(zones) == 0:
                 player.x = new_x
@@ -359,13 +364,13 @@ class CarrierMonster(MonsterAI):
             choice = utils.random_choice(self.launch_table)
             if choice == SCOUT:
                 fighter_component = Fighter(player=player, hp=10, defense=0, power=0, xp=30, base_speed=75,
-                                            death_function=projectile_death)
+                                            death_function=monster_death)
                 ai_component = ScoutMonster(activated=True)
                 enemy = Object(self.owner.x, self.owner.y, 'S', SCOUT, libtcod.darker_green, blocks=True,
                                fighter=fighter_component, ai=ai_component)
             elif choice == FIGHTER:
                 fighter_component = Fighter(player=player, hp=30, defense=0, power=0, xp=50, base_speed=125,
-                                            death_function=projectile_death)
+                                            death_function=monster_death)
                 ai_component = FighterMonster(activated=True)
                 enemy = Object(self.owner.x, self.owner.y, 'F', FIGHTER, libtcod.darker_green, blocks=True,
                                fighter=fighter_component, ai=ai_component)
