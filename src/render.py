@@ -117,10 +117,10 @@ def render_all(fov_recompute, player, objects, projectiles, fov_map, game_map, c
         non_interactive_object.draw(con, fov_map, game_map, camera_x, camera_y)
     for projectile in projectiles:
         projectile.draw(con, fov_map, game_map, camera_x, camera_y)
-    player.draw(con, fov_map, game_map, camera_x, camera_y)
     for o in objects:
         if o != player:
             o.draw(con, fov_map, game_map, camera_x, camera_y)
+    player.draw(con, fov_map, game_map, camera_x, camera_y)
 
     if fov_recompute:
         fov_recompute = False
