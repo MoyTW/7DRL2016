@@ -871,13 +871,14 @@ def new_game():
 def next_level():
     global dungeon_level, game_map
 
-    message('Healing before going down to the next level.', libtcod.light_violet)
-    player.fighter.heal(player.fighter.max_hp / 2)
-
     dungeon_level += 1
     message('Going down! Entering level ' + str(dungeon_level), libtcod.white)
     game_map = make_game_map()
     initialize_fov()
+
+    message('The reprieve granted to you by the lengthy jump has given you a chance perform minor repairs '
+            'on your ship!', libtcod.light_violet)
+    player.fighter.heal(5)
 
 
 def initialize_fov():
