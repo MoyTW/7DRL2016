@@ -113,7 +113,8 @@ ENCOUNTERS_TO_ENCOUNTER_TABLES = {L0_ENCOUNTER: L0_ENCOUNTER_TABLE,
                                   L3_ENCOUNTER: L3_ENCOUNTER_TABLE,
                                   L4_ENCOUNTER: L4_ENCOUNTER_TABLE,
                                   L5_ENCOUNTER: L5_ENCOUNTER_TABLE,
-                                  L6_ENCOUNTER: L6_ENCOUNTER_TABLE}
+                                  L6_ENCOUNTER: L6_ENCOUNTER_TABLE,
+                                  L7_ENCOUNTER: L7_ENCOUNTER_TABLE}
 
 # This table is kind of silly in that there's a much better way to represent it! If you have time (you won't)
 # Scouts
@@ -140,7 +141,8 @@ def choose_encounter_for_level(level):
              L3_ENCOUNTER: utils.from_dungeon_level(level, L3_ENCOUNTER_CHANCES),
              L4_ENCOUNTER: utils.from_dungeon_level(level, L4_ENCOUNTER_CHANCES),
              L5_ENCOUNTER: utils.from_dungeon_level(level, L5_ENCOUNTER_CHANCES),
-             L6_ENCOUNTER: utils.from_dungeon_level(level, L6_ENCOUNTER_CHANCES)}
+             L6_ENCOUNTER: utils.from_dungeon_level(level, L6_ENCOUNTER_CHANCES),
+             L7_ENCOUNTER: utils.from_dungeon_level(level, L7_ENCOUNTER_CHANCES)}
     encounter_level = utils.random_choice(table)
     encounter_table = ENCOUNTERS_TO_ENCOUNTER_TABLES[encounter_level]
     encounter = utils.random_choice(encounter_table)
